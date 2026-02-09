@@ -98,7 +98,7 @@ const PhotoWall = () => {
     try {
       for (const file of Array.from(files)) {
         if (file.size > 10 * 1024 * 1024) {
-          toast.error(`${file.name} 超过10MB限制`);
+          toast.error(`${file.name} exceeds 10MB limit`);
           continue;
         }
         // Compress for display
@@ -108,14 +108,14 @@ const PhotoWall = () => {
           contentType: "image/jpeg",
         });
         if (error) {
-          toast.error(`上传失败: ${file.name}`);
+          toast.error(`Upload failed: ${file.name}`);
           console.error(error);
         }
       }
-      toast.success("照片上传成功！");
+      toast.success("Photos uploaded successfully!");
       fetchPhotos();
     } catch (err) {
-      toast.error("上传出错");
+      toast.error("Upload error");
       console.error(err);
     } finally {
       setUploading(false);
@@ -126,9 +126,9 @@ const PhotoWall = () => {
   const handleDelete = async (name: string) => {
     const { error } = await supabase.storage.from("photos").remove([name]);
     if (error) {
-      toast.error("删除失败");
+      toast.error("Delete failed");
     } else {
-      toast.success("已删除");
+      toast.success("Deleted");
       fetchPhotos();
       setSelectedPhoto(null);
     }
@@ -141,16 +141,16 @@ const PhotoWall = () => {
     <section className="relative z-10 py-20 px-4">
       <div className="text-center mb-12">
         <h2 className="font-display text-3xl sm:text-4xl text-gradient-love mb-4">
-          我们的照片墙
+          Our Photo Wall
         </h2>
-        <p className="font-body text-lg text-muted-foreground">用照片记录每一个美好瞬间</p>
+        <p className="text-lg text-muted-foreground">Capturing every beautiful moment together</p>
       </div>
 
       {/* Upload button */}
       <div className="flex justify-center mb-12">
         <label className="cursor-pointer flex items-center gap-2 px-6 py-3 bg-card border border-border rounded-lg hover:border-love transition-colors">
           <Upload size={18} className="text-love" />
-          <span className="font-body text-foreground">{uploading ? "上传中..." : "上传照片"}</span>
+          <span className="text-foreground">{uploading ? "Uploading..." : "Upload Photos"}</span>
           <input
             type="file"
             accept="image/*"
@@ -196,8 +196,8 @@ const PhotoWall = () => {
       ) : (
         <div className="flex flex-col items-center gap-4 py-20">
           <Heart size={48} className="text-muted-foreground animate-pulse-glow" />
-          <p className="text-muted-foreground font-body text-lg">
-            还没有照片，快上传你们的甜蜜瞬间吧！
+          <p className="text-muted-foreground text-lg">
+            No photos yet. Upload your sweet moments!
           </p>
         </div>
       )}
@@ -217,15 +217,15 @@ const PhotoWall = () => {
             <div className="flex gap-3 justify-center mt-4">
               <button
                 onClick={() => setSelectedPhoto(null)}
-                className="px-4 py-2 rounded-lg bg-card border border-border text-foreground font-body hover:border-love transition-colors"
+                className="px-4 py-2 rounded-lg bg-card border border-border text-foreground hover:border-love transition-colors"
               >
-                关闭
+                Close
               </button>
               <button
                 onClick={() => handleDelete(selectedPhoto)}
-                className="px-4 py-2 rounded-lg bg-destructive text-destructive-foreground font-body hover:opacity-80 transition-opacity"
+                className="px-4 py-2 rounded-lg bg-destructive text-destructive-foreground hover:opacity-80 transition-opacity"
               >
-                删除
+                Delete
               </button>
             </div>
           </div>

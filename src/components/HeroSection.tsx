@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-
-const ANNIVERSARY_DATE = new Date("2022-09-17T00:00:00+08:00");
+import MusicButton from "./MusicButton";
 
 const getDaysTogether = (): number => {
   // Use UTC+8 (China Standard Time)
@@ -23,9 +22,14 @@ const HeroSection = () => {
   return (
     <section className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 py-20">
       {/* Names */}
-      <h1 className="font-script text-5xl sm:text-7xl md:text-8xl text-gradient-love glow-gold mb-8 animate-fade-in-up">
+      <h1 className="font-script text-5xl sm:text-7xl md:text-8xl text-gradient-love glow-gold mb-4 animate-fade-in-up">
         Jamie & Alica
       </h1>
+
+      {/* Music Button */}
+      <div className="mb-8 animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
+        <MusicButton />
+      </div>
 
       {/* Dates */}
       <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-10 mb-12 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
@@ -41,14 +45,14 @@ const HeroSection = () => {
 
       {/* Day counter */}
       <div className="mt-12 text-center animate-fade-in-up" style={{ animationDelay: "0.6s" }}>
-        <p className="text-muted-foreground font-body text-lg mb-2">我们已经在一起</p>
+        <p className="text-muted-foreground text-lg mb-2">We have been together for</p>
         <div className="flex items-baseline gap-2 justify-center">
           <span className="font-display text-6xl sm:text-8xl text-gradient-love font-bold glow-gold">
             {days}
           </span>
-          <span className="font-body text-2xl text-gold">天</span>
+          <span className="text-2xl text-gold">days</span>
         </div>
-        <p className="text-muted-foreground font-body text-lg mt-2">每一天都是最好的日子 ♥</p>
+        <p className="text-muted-foreground text-lg mt-2">Every day is the best day ♥</p>
       </div>
 
       {/* Scroll hint */}
@@ -66,7 +70,7 @@ const DateBadge = ({ date, label, large }: { date: string; label: string; large?
     <p className={`font-display ${large ? "text-2xl sm:text-3xl" : "text-lg sm:text-xl"} text-gold glow-gold`}>
       {date}
     </p>
-    <p className={`font-body ${large ? "text-base" : "text-sm"} text-muted-foreground mt-1`}>
+    <p className={`${large ? "text-base" : "text-sm"} text-muted-foreground mt-1`}>
       {label}
     </p>
   </div>

@@ -6,52 +6,52 @@
 
 @layer base {
   :root {
-    /* Dark romantic palette inspired by Photo_Wall */
-    --background: 240 20% 8%;
-    --foreground: 35 30% 90%;
+    /* Deep red romantic palette inspired by Photo_Wall */
+    --background: 0 45% 18%;
+    --foreground: 40 30% 95%;
 
-    --card: 240 15% 12%;
-    --card-foreground: 35 30% 90%;
+    --card: 0 40% 22%;
+    --card-foreground: 40 30% 95%;
 
-    --popover: 240 15% 12%;
-    --popover-foreground: 35 30% 90%;
+    --popover: 0 40% 22%;
+    --popover-foreground: 40 30% 95%;
 
-    --primary: 340 60% 55%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 0 50% 45%;
+    --primary-foreground: 40 30% 95%;
 
-    --secondary: 240 15% 16%;
-    --secondary-foreground: 35 30% 85%;
+    --secondary: 0 35% 25%;
+    --secondary-foreground: 40 25% 90%;
 
-    --muted: 240 10% 18%;
-    --muted-foreground: 35 15% 55%;
+    --muted: 0 30% 28%;
+    --muted-foreground: 40 20% 70%;
 
-    --accent: 30 50% 65%;
-    --accent-foreground: 240 20% 8%;
+    --accent: 38 70% 70%;
+    --accent-foreground: 0 45% 18%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 240 10% 20%;
-    --input: 240 10% 20%;
-    --ring: 340 60% 55%;
+    --border: 0 30% 30%;
+    --input: 0 30% 30%;
+    --ring: 0 50% 45%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 240 20% 8%;
-    --sidebar-foreground: 35 30% 90%;
-    --sidebar-primary: 340 60% 55%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 15% 16%;
-    --sidebar-accent-foreground: 35 30% 85%;
-    --sidebar-border: 240 10% 20%;
-    --sidebar-ring: 340 60% 55%;
+    --sidebar-background: 0 45% 18%;
+    --sidebar-foreground: 40 30% 95%;
+    --sidebar-primary: 0 50% 45%;
+    --sidebar-primary-foreground: 40 30% 95%;
+    --sidebar-accent: 0 35% 25%;
+    --sidebar-accent-foreground: 40 25% 90%;
+    --sidebar-border: 0 30% 30%;
+    --sidebar-ring: 0 50% 45%;
 
     /* Custom tokens */
-    --love: 340 70% 50%;
-    --love-glow: 340 80% 60%;
-    --gold: 38 60% 65%;
-    --gold-soft: 38 40% 50%;
-    --cream: 35 30% 90%;
+    --love: 0 60% 50%;
+    --love-glow: 0 70% 60%;
+    --gold: 38 70% 70%;
+    --gold-soft: 38 50% 55%;
+    --cream: 40 30% 95%;
   }
 }
 
@@ -62,11 +62,13 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Cormorant Garamond', serif;
+    font-family: 'Playfair Display', serif;
+    font-weight: 400;
   }
 
-  h1, h2, h3 {
+  h1, h2, h3, h4, h5, h6 {
     font-family: 'Playfair Display', serif;
+    font-weight: 600;
   }
 }
 
