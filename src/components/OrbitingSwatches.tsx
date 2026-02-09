@@ -13,7 +13,7 @@ const OrbitingSwatches = () => {
   const swatches = useMemo(() => {
     return SWATCH_COLORS.map((color, i) => {
       const angle = (360 / SWATCH_COLORS.length) * i;
-      const orbitRadius = 35 + Math.random() * 15; // % of viewport
+      const orbitRadius = 20 + Math.random() * 12; // reduced for mobile safety
       const size = 60 + Math.random() * 80;
       const duration = 18 + Math.random() * 14;
       const delay = i * -3;
