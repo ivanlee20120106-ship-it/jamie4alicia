@@ -64,6 +64,24 @@
     @apply bg-background text-foreground;
     font-family: 'Playfair Display', serif;
     font-weight: 400;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: -50px;
+    left: -50px;
+    width: 200%;
+    height: 200%;
+    background-image: radial-gradient(
+      circle at center,
+      rgba(222, 184, 135, 0.2),
+      transparent 70%
+    );
+    animation: rotateBackground 30s linear infinite;
+    z-index: -1;
+    pointer-events: none;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -102,6 +120,12 @@
   .glow-gold {
     text-shadow: 0 0 20px hsl(var(--gold) / 0.5);
   }
+}
+
+/* Rotating background pattern */
+@keyframes rotateBackground {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* Floating hearts animation */
