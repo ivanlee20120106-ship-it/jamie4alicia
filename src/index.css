@@ -144,7 +144,7 @@
 }
 
 .animate-float-heart-spin {
-  animation: float-heart-spin 10s ease-in-out infinite;
+  animation: float-heart-spin 6s ease-in-out infinite;
 }
 
 .animate-pulse-glow {
