@@ -1,27 +1,30 @@
 
+# Improve Sign In / Sign Out Button Design
 
-# Photo Wall Updates
+The current Sign In and Sign Out buttons use generic `LogIn`/`LogOut` icons that feel out of place on this romantic couple's website. The redesign will make the auth buttons blend seamlessly with the love theme while remaining elegant and unobtrusive.
 
-## Changes to `src/components/PhotoWall.tsx`
+## Design Changes
 
-### 1. Remove black background container
-Remove the `bg-black rounded-2xl` wrapper div, keeping the grid layout and heart shape intact.
+**Sign In button (logged out state):**
+- Replace the `LogIn` icon with a `Heart` icon to match the romantic theme
+- Use a subtle gradient border effect matching the gold/love palette
+- Add a gentle glow on hover for a warm, inviting feel
+- Make the button more compact and icon-focused -- show only the heart icon by default, with text appearing on hover (desktop) or staying as an icon-only button (mobile)
 
-### 2. Show empty placeholder grid (no photos state)
-Currently when there are no photos, it shows a pulsing heart icon. Instead, always show the heart-shaped grid with gray placeholder cells (`bg-gray-300 rounded-xl`), regardless of whether photos exist. When photos are uploaded later, they fill in the cells.
+**Sign Out button (logged in state):**
+- Replace the `LogOut` icon with a smaller, understated icon-only button using the `X` or `LogOut` icon in muted tones so it doesn't distract from the content
+- Keep it minimal since sign-out is a secondary action
 
-### 3. Clear all existing photos from storage
-Use the Supabase storage API to delete all files in the `photos` bucket. This will be done by listing all files and removing them via a one-time action, or I can provide a SQL migration / manual step.
+**Dialog improvements:**
+- Add a heart icon to the dialog header for visual consistency
+- Add a subtle love-themed gradient to the submit button
 
 ## Technical Details
 
-**File: `src/components/PhotoWall.tsx`**
-- Remove the `<div className="bg-black rounded-2xl p-4 sm:p-6 md:p-10">` wrapper
-- Merge the two render paths (photos vs no-photos) into one: always render the heart grid
-- If a photo exists for a cell, show it; otherwise show the gray placeholder
-- Keep all existing: grid dimensions, gap, rounded corners, hover effects, upload button, lightbox
+Only one file needs to be modified: `src/components/AuthDialog.tsx`
 
-**Clearing photos:**
-- Add a temporary `useEffect` or button that calls `supabase.storage.from("photos").list()` then `.remove()` on all files
-- Or I can simply list and delete via the existing `handleDelete` pattern
-
+- Replace `LogIn` import with `Heart` from lucide-react
+- Update the Sign In button to use `Heart` icon with gold/love gradient styling and a hover glow effect
+- Refine the Sign Out button to be more subtle and minimal
+- Add a small `Heart` icon in the dialog header next to the title
+- Apply `text-gradient-love` or `glow-gold` utility classes to tie in with the existing design system
