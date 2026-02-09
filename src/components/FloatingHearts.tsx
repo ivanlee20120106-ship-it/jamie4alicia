@@ -17,13 +17,13 @@ const HEART_COLORS = [
 
 const FloatingHearts = () => {
   const hearts = useMemo(() => {
-    return Array.from({ length: 24 }, (_, i) => ({
+    return Array.from({ length: 65 }, (_, i) => ({
       id: i,
       left: `${Math.random() * 100}%`,
       delay: `${Math.random() * 5}s`,
       duration: `${4 + Math.random() * 4}s`,
       size: 12 + Math.random() * 20,
-      opacity: 0.2 + Math.random() * 0.3,
+      opacity: (0.2 + Math.random() * 0.3) * 0.5,
       color: HEART_COLORS[Math.floor(Math.random() * HEART_COLORS.length)],
       rotateStart: Math.floor(Math.random() * 360),
       rotateEnd: Math.floor(Math.random() * 720) - 360,
