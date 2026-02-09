@@ -88,6 +88,29 @@ const MusicButton = () => {
     audioRef.current.currentTime = Number(e.target.value);
   };
 
+  const validateAudioFile = async (file: File): Promise<boolean> => {
+    const allowedMimes = ["audio/mpeg", "audio/mp3", "audio/wav", "audio/x-wav", "audio/mp4", "audio/aac", "audio/ogg", "audio/flac", "audio/x-m4a"];
+    const allowedExts = [".mp3", ".wav", ".m4a", ".aac", ".ogg", ".flac"];
+    const ext = file.name.toLowerCase().slice(file.name.lastIndexOf("."));
+    if (!allowedMimes.includes(file.type) && !allowedExts.includes(ext)) {
+      toast.error("Only audio files (MP3, WAV, M4A, AAC, OGG, FLAC) are allowed");
+      return false;
+    }
+    // Validate magic bytes
+    const buffer = await file.slice(0, 12).arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    const isMP3 = bytes[0] === 0xFF && (bytes[1] & 0xE0) === 0xE0;
+    const isWAV = bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46;
+    const isM4A = bytes[4] === 0x66 && bytes[5] === 0x74 && bytes[6] === 0x79 && bytes[7] === 0x70;
+    const isOGG = bytes[0] === 0x4F && bytes[1] === 0x67 && bytes[2] === 0x67 && bytes[3] === 0x53;
+    const isFLAC = bytes[0] === 0x66 && bytes[1] === 0x4C && bytes[2] === 0x61 && bytes[3] === 0x43;
+    if (!isMP3 && !isWAV && !isM4A && !isOGG && !isFLAC) {
+      toast.error("File does not appear to be a valid audio file");
+      return false;
+    }
+    return true;
+  };
+
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -95,10 +118,12 @@ const MusicButton = () => {
       toast.error("Music file must be under 20MB");
       return;
     }
+    if (!(await validateAudioFile(file))) return;
     setUploading(true);
-    const fileName = `${Date.now()}-${file.name}`;
+    const safeExt = file.name.toLowerCase().slice(file.name.lastIndexOf(".")) || ".mp3";
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}${safeExt}`;
     const { error } = await supabase.storage.from("music").upload(fileName, file, {
-      contentType: file.type,
+      contentType: file.type || "audio/mpeg",
     });
     if (error) {
       toast.error("Upload failed");
