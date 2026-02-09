@@ -66,6 +66,28 @@ const PhotoWall = () => {
 
   useEffect(() => { fetchPhotos(); }, [fetchPhotos]);
 
+  const validateImageFile = async (file: File): Promise<boolean> => {
+    const allowedMimes = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp"];
+    const allowedExts = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"];
+    const ext = file.name.toLowerCase().slice(file.name.lastIndexOf("."));
+    if (!allowedMimes.includes(file.type) && !allowedExts.includes(ext)) {
+      toast.error(`${file.name}: Only image files (JPG, PNG, GIF, WebP) are allowed`);
+      return false;
+    }
+    const buffer = await file.slice(0, 8).arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    const isJPEG = bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF;
+    const isPNG = bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47;
+    const isGIF = bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46;
+    const isWEBP = bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 && bytes[8] === 0x57;
+    const isBMP = bytes[0] === 0x42 && bytes[1] === 0x4D;
+    if (!isJPEG && !isPNG && !isGIF && !isWEBP && !isBMP) {
+      toast.error(`${file.name}: File does not appear to be a valid image`);
+      return false;
+    }
+    return true;
+  };
+
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
@@ -73,6 +95,7 @@ const PhotoWall = () => {
     try {
       for (const file of Array.from(files)) {
         if (file.size > 10 * 1024 * 1024) { toast.error(`${file.name} exceeds 10MB limit`); continue; }
+        if (!(await validateImageFile(file))) continue;
         const compressed = await compressImage(file);
         const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
         const { error } = await supabase.storage.from("photos").upload(fileName, compressed, { contentType: "image/jpeg" });
