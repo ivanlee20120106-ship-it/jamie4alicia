@@ -6,52 +6,52 @@
 
 @layer base {
   :root {
-    /* Deep red romantic palette inspired by Photo_Wall */
-    --background: 0 45% 18%;
-    --foreground: 40 30% 95%;
+    /* Cornflower blue + soft pink + lemon chiffon palette */
+    --background: 219 60% 12%;
+    --foreground: 54 80% 94%;
 
-    --card: 0 40% 22%;
-    --card-foreground: 40 30% 95%;
+    --card: 219 45% 16%;
+    --card-foreground: 54 80% 94%;
 
-    --popover: 0 40% 22%;
-    --popover-foreground: 40 30% 95%;
+    --popover: 219 45% 16%;
+    --popover-foreground: 54 80% 94%;
 
-    --primary: 0 50% 45%;
-    --primary-foreground: 40 30% 95%;
+    --primary: 219 79% 66%;
+    --primary-foreground: 219 60% 12%;
 
-    --secondary: 0 35% 25%;
-    --secondary-foreground: 40 25% 90%;
+    --secondary: 351 60% 78%;
+    --secondary-foreground: 219 60% 12%;
 
-    --muted: 0 30% 28%;
-    --muted-foreground: 40 20% 70%;
+    --muted: 219 30% 22%;
+    --muted-foreground: 219 20% 65%;
 
-    --accent: 38 70% 70%;
-    --accent-foreground: 0 45% 18%;
+    --accent: 54 100% 90%;
+    --accent-foreground: 219 60% 12%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 0 30% 30%;
-    --input: 0 30% 30%;
-    --ring: 0 50% 45%;
+    --border: 219 30% 25%;
+    --input: 219 30% 25%;
+    --ring: 219 79% 66%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 0 45% 18%;
-    --sidebar-foreground: 40 30% 95%;
-    --sidebar-primary: 0 50% 45%;
-    --sidebar-primary-foreground: 40 30% 95%;
-    --sidebar-accent: 0 35% 25%;
-    --sidebar-accent-foreground: 40 25% 90%;
-    --sidebar-border: 0 30% 30%;
-    --sidebar-ring: 0 50% 45%;
+    --sidebar-background: 219 60% 12%;
+    --sidebar-foreground: 54 80% 94%;
+    --sidebar-primary: 219 79% 66%;
+    --sidebar-primary-foreground: 54 80% 94%;
+    --sidebar-accent: 219 45% 20%;
+    --sidebar-accent-foreground: 54 80% 94%;
+    --sidebar-border: 219 30% 25%;
+    --sidebar-ring: 219 79% 66%;
 
     /* Custom tokens */
-    --love: 0 60% 50%;
-    --love-glow: 0 70% 60%;
-    --gold: 38 70% 70%;
-    --gold-soft: 38 50% 55%;
-    --cream: 40 30% 95%;
+    --love: 351 100% 86%;
+    --love-glow: 351 80% 75%;
+    --gold: 54 100% 90%;
+    --gold-soft: 54 60% 75%;
+    --cream: 54 80% 94%;
   }
 }
 
@@ -87,7 +87,7 @@
 
   .text-gradient-love {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(var(--love)), hsl(var(--gold)));
+    background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--love)));
   }
 
   .text-gradient-gold {
