@@ -7,11 +7,17 @@ const HEART_COLORS = [
   "text-gold-soft",
   "text-primary",
   "text-accent",
+  "text-pink-400",
+  "text-rose-300",
+  "text-orange-400",
+  "text-amber-300",
+  "text-fuchsia-400",
+  "text-red-300",
 ];
 
 const FloatingHearts = () => {
   const hearts = useMemo(() => {
-    return Array.from({ length: 25 }, (_, i) => ({
+    return Array.from({ length: 12 }, (_, i) => ({
       id: i,
       left: `${Math.random() * 100}%`,
       delay: `${Math.random() * 5}s`,
