@@ -17,7 +17,7 @@ const HEART_COLORS = [
 
 const FloatingHearts = () => {
   const hearts = useMemo(() => {
-    return Array.from({ length: 12 }, (_, i) => ({
+    return Array.from({ length: 24 }, (_, i) => ({
       id: i,
       left: `${Math.random() * 100}%`,
       delay: `${Math.random() * 5}s`,
