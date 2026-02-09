@@ -102,9 +102,9 @@ const PhotoWall = () => {
       </div>
 
       <div className="flex justify-center mb-8 sm:mb-12">
-        <label className="cursor-pointer flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-card border border-border rounded-lg hover:border-love transition-colors">
-          <Upload size={18} className="text-love" />
-          <span className="text-foreground text-sm sm:text-base">{uploading ? "Uploading..." : "Upload Photos"}</span>
+        <label className="cursor-pointer flex items-center gap-2 px-6 py-3 rounded-full bg-card/60 backdrop-blur-sm border border-border/50 hover:bg-card/80 transition-all duration-300">
+          <Upload size={18} className="text-gold" />
+          <span className="text-foreground text-sm">{uploading ? "Uploading..." : "Upload Photos"}</span>
           <input type="file" accept="image/*" multiple onChange={handleUpload} disabled={uploading} className="hidden" />
         </label>
       </div>
