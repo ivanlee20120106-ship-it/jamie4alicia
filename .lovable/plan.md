@@ -1,36 +1,27 @@
 
 
-# Fix Photo Wall - Heart Shape with Two Humps
-
-## Problem
-The current grid has row 1 as `[0,0,0,1,1,0,0,0,0]` (2 blocks centered), which looks like a diamond, not a heart. The reference site uses a classic heart shape with **two humps** at the top (4 blocks at columns 3,4,6,7).
+# Photo Wall Updates
 
 ## Changes to `src/components/PhotoWall.tsx`
 
-### 1. Fix HEART_GRID to match the reference heart shape
-```typescript
-const HEART_GRID = [
-  [0,0,1,1,0,1,1,0,0], // Row 1: 4 blocks (two humps)
-  [0,1,1,1,1,1,1,1,0], // Row 2: 7 blocks
-  [1,1,1,1,1,1,1,1,1], // Row 3: 9 blocks
-  [0,1,1,1,1,1,1,1,0], // Row 4: 7 blocks
-  [0,0,1,1,1,1,1,0,0], // Row 5: 5 blocks
-  [0,0,0,1,1,1,0,0,0], // Row 6: 3 blocks
-  [0,0,0,0,1,0,0,0,0], // Row 7: 1 block
-];
-```
+### 1. Remove black background container
+Remove the `bg-black rounded-2xl` wrapper div, keeping the grid layout and heart shape intact.
 
-### 2. Update grid styling to match reference CSS
-- Cell size: fixed `70px` on desktop, responsive on mobile (`w-[40px] h-[40px] sm:w-[55px] sm:h-[55px] md:w-[70px] md:h-[70px]`)
-- Gap: `10px` (responsive: `gap-1.5 sm:gap-2 md:gap-2.5`)
-- Border radius: `rounded-xl` (12px)
-- Background: black (`bg-black`) behind the grid with `padding: 40px`
-- Empty cells remain invisible (no background)
-- Photo cells: gray placeholder (`bg-gray-300`) when no photo, otherwise show image
+### 2. Show empty placeholder grid (no photos state)
+Currently when there are no photos, it shows a pulsing heart icon. Instead, always show the heart-shaped grid with gray placeholder cells (`bg-gray-300 rounded-xl`), regardless of whether photos exist. When photos are uploaded later, they fill in the cells.
 
-### 3. Add black container behind the heart grid
-Wrap the grid in a container with black background and padding, matching the reference.
+### 3. Clear all existing photos from storage
+Use the Supabase storage API to delete all files in the `photos` bucket. This will be done by listing all files and removing them via a one-time action, or I can provide a SQL migration / manual step.
 
-### Files to modify
-- `src/components/PhotoWall.tsx` -- grid data + styling updates
+## Technical Details
+
+**File: `src/components/PhotoWall.tsx`**
+- Remove the `<div className="bg-black rounded-2xl p-4 sm:p-6 md:p-10">` wrapper
+- Merge the two render paths (photos vs no-photos) into one: always render the heart grid
+- If a photo exists for a cell, show it; otherwise show the gray placeholder
+- Keep all existing: grid dimensions, gap, rounded corners, hover effects, upload button, lightbox
+
+**Clearing photos:**
+- Add a temporary `useEffect` or button that calls `supabase.storage.from("photos").list()` then `.remove()` on all files
+- Or I can simply list and delete via the existing `handleDelete` pattern
 
