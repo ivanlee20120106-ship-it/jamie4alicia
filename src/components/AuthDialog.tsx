@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LogIn, LogOut, X } from "lucide-react";
+import { Heart, LogOut, X } from "lucide-react";
 import { toast } from "sonner";
 import type { User } from "@supabase/supabase-js";
 
@@ -42,10 +42,10 @@ const AuthDialog = ({ user, onSignIn, onSignUp, onSignOut }: AuthDialogProps) =>
     return (
       <button
         onClick={onSignOut}
-        className="flex items-center gap-2 px-4 py-2 rounded-full bg-card/60 backdrop-blur-sm border border-border/50 hover:bg-card/80 transition-all duration-300 text-sm text-foreground"
+        className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-all duration-300"
+        title="Sign Out"
       >
-        <LogOut size={16} className="text-gold" />
-        Sign Out
+        <LogOut size={16} />
       </button>
     );
   }
@@ -54,17 +54,20 @@ const AuthDialog = ({ user, onSignIn, onSignUp, onSignOut }: AuthDialogProps) =>
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-2 px-4 py-2 rounded-full bg-card/60 backdrop-blur-sm border border-border/50 hover:bg-card/80 transition-all duration-300 text-sm text-foreground"
+        className="group flex items-center gap-2 px-3 py-2 rounded-full border border-gold/30 bg-card/40 backdrop-blur-sm hover:border-gold/60 hover:shadow-[0_0_16px_hsl(var(--gold)/0.25)] transition-all duration-300"
       >
-        <LogIn size={16} className="text-gold" />
-        Sign In
+        <Heart size={16} className="text-gold fill-gold/30 group-hover:fill-gold/60 transition-colors duration-300" />
+        <span className="hidden sm:inline text-sm text-gold font-body">Sign In</span>
       </button>
 
       {isOpen && (
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setIsOpen(false)}>
           <div className="bg-card border border-border rounded-xl p-6 w-full max-w-sm shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-display text-foreground">{isSignUp ? "Create Account" : "Sign In"}</h3>
+              <div className="flex items-center gap-2">
+                <Heart size={18} className="text-love fill-love/40" />
+                <h3 className="text-lg font-display text-foreground">{isSignUp ? "Create Account" : "Sign In"}</h3>
+              </div>
               <button onClick={() => setIsOpen(false)} className="text-muted-foreground hover:text-foreground"><X size={18} /></button>
             </div>
             <form onSubmit={handleSubmit} className="space-y-3">
@@ -88,7 +91,7 @@ const AuthDialog = ({ user, onSignIn, onSignUp, onSignOut }: AuthDialogProps) =>
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full py-2 rounded-lg bg-love text-white text-sm font-medium hover:bg-love/90 transition-colors disabled:opacity-50"
+                className="w-full py-2 rounded-lg bg-gradient-to-r from-love to-love-glow text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
               >
                 {submitting ? "..." : isSignUp ? "Sign Up" : "Sign In"}
               </button>
