@@ -47,6 +47,15 @@ const PhotoWall = () => {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [uploading, setUploading] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      setUser(session?.user ?? null);
+    });
+    supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null));
+    return () => subscription.unsubscribe();
+  }, []);
 
   const fetchPhotos = useCallback(async () => {
     const { data, error } = await supabase.storage.from("photos").list("", {
@@ -124,13 +133,15 @@ const PhotoWall = () => {
         <p className="text-sm sm:text-lg text-muted-foreground">Capturing every beautiful moment together</p>
       </div>
 
-      <div className="flex justify-center mb-8 sm:mb-12">
-        <label className="cursor-pointer flex items-center gap-2 px-6 py-3 rounded-full bg-card/60 backdrop-blur-sm border border-border/50 hover:bg-card/80 transition-all duration-300">
-          <Upload size={18} className="text-gold" />
-          <span className="text-foreground text-sm">{uploading ? "Uploading..." : "Upload Photos"}</span>
-          <input type="file" accept="image/*" multiple onChange={handleUpload} disabled={uploading} className="hidden" />
-        </label>
-      </div>
+      {user && (
+        <div className="flex justify-center mb-8 sm:mb-12">
+          <label className="cursor-pointer flex items-center gap-2 px-6 py-3 rounded-full bg-card/60 backdrop-blur-sm border border-border/50 hover:bg-card/80 transition-all duration-300">
+            <Upload size={18} className="text-gold" />
+            <span className="text-foreground text-sm">{uploading ? "Uploading..." : "Upload Photos"}</span>
+            <input type="file" accept="image/*" multiple onChange={handleUpload} disabled={uploading} className="hidden" />
+          </label>
+        </div>
+      )}
 
       <div className="flex justify-center">
         <div
@@ -161,6 +172,7 @@ const PhotoWall = () => {
           photoName={selectedPhoto}
           onClose={() => setSelectedPhoto(null)}
           onDelete={handleDelete}
+          canDelete={!!user}
         />
       )}
     </section>

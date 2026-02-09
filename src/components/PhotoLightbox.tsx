@@ -4,9 +4,10 @@ interface PhotoLightboxProps {
   photoName: string;
   onClose: () => void;
   onDelete: (name: string) => void;
+  canDelete?: boolean;
 }
 
-const PhotoLightbox = ({ photoName, onClose, onDelete }: PhotoLightboxProps) => {
+const PhotoLightbox = ({ photoName, onClose, onDelete, canDelete = true }: PhotoLightboxProps) => {
   const url = supabase.storage.from("photos").getPublicUrl(photoName).data.publicUrl;
 
   return (
@@ -23,12 +24,14 @@ const PhotoLightbox = ({ photoName, onClose, onDelete }: PhotoLightboxProps) => 
           >
             Close
           </button>
-          <button
-            onClick={() => onDelete(photoName)}
-            className="px-4 py-2 rounded-lg bg-destructive text-destructive-foreground hover:opacity-80 transition-opacity"
-          >
-            Delete
-          </button>
+          {canDelete && (
+            <button
+              onClick={() => onDelete(photoName)}
+              className="px-4 py-2 rounded-lg bg-destructive text-destructive-foreground hover:opacity-80 transition-opacity"
+            >
+              Delete
+            </button>
+          )}
         </div>
       </div>
     </div>

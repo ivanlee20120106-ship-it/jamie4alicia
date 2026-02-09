@@ -17,6 +17,15 @@ const MusicButton = () => {
   const [tracks, setTracks] = useState<MusicFile[]>([]);
   const [currentTrack, setCurrentTrack] = useState(0);
   const [uploading, setUploading] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      setUser(session?.user ?? null);
+    });
+    supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null));
+    return () => subscription.unsubscribe();
+  }, []);
 
   const fetchTracks = useCallback(async () => {
     const { data, error } = await supabase.storage.from("music").list("", {
@@ -235,29 +244,31 @@ const MusicButton = () => {
             </button>
           </div>
 
-          {/* Upload */}
-          <div className="mt-4 pt-3 border-t border-border/30">
-            <label className="flex items-center justify-center gap-2 cursor-pointer text-muted-foreground hover:text-gold transition-colors text-sm">
-              {uploading ? (
-                <>
-                  <Music size={16} className="animate-spin" />
-                  <span>Uploading...</span>
-                </>
-              ) : (
-                <>
-                  <Upload size={16} />
-                  <span>Upload Music</span>
-                </>
-              )}
-              <input
-                type="file"
-                accept="audio/*"
-                onChange={handleUpload}
-                disabled={uploading}
-                className="hidden"
-              />
-            </label>
-          </div>
+          {/* Upload - only for authenticated users */}
+          {user && (
+            <div className="mt-4 pt-3 border-t border-border/30">
+              <label className="flex items-center justify-center gap-2 cursor-pointer text-muted-foreground hover:text-gold transition-colors text-sm">
+                {uploading ? (
+                  <>
+                    <Music size={16} className="animate-spin" />
+                    <span>Uploading...</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload size={16} />
+                    <span>Upload Music</span>
+                  </>
+                )}
+                <input
+                  type="file"
+                  accept="audio/*"
+                  onChange={handleUpload}
+                  disabled={uploading}
+                  className="hidden"
+                />
+              </label>
+            </div>
+          )}
         </div>
       )}
     </>
