@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import PhotoLightbox from "./PhotoLightbox";
 
 const HEART_GRID = [
-  [0,0,0,1,1,0,0,0,0],
+  [0,0,1,1,0,1,1,0,0], // Row 1: two humps
   [0,1,1,1,1,1,1,1,0],
   [1,1,1,1,1,1,1,1,1],
   [0,1,1,1,1,1,1,1,0],
@@ -111,26 +111,28 @@ const PhotoWall = () => {
 
       {photos.length > 0 ? (
         <div className="flex justify-center">
-          <div
-            className="grid gap-1 sm:gap-1.5 md:gap-2 lg:gap-2.5"
-            style={{ gridTemplateColumns: "repeat(9, 1fr)" }}
-          >
-            {HEART_GRID.flat().map((filled, i) => {
-              if (!filled) {
-                return <div key={i} className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16 lg:w-20 lg:h-20" />;
-              }
-              const photo = photos[photoIndex % photos.length];
-              photoIndex++;
-              return (
-                <div
-                  key={i}
-                  className="w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 rounded-md overflow-hidden border border-border/30 hover:scale-110 hover:z-10 transition-transform duration-300 cursor-pointer"
-                  onClick={() => setSelectedPhoto(photo.name)}
-                >
-                  <img src={photo.url} alt="love" className="w-full h-full object-cover" loading="lazy" />
-                </div>
-              );
-            })}
+          <div className="bg-black rounded-2xl p-4 sm:p-6 md:p-10">
+            <div
+              className="grid gap-1.5 sm:gap-2 md:gap-2.5"
+              style={{ gridTemplateColumns: "repeat(9, 1fr)" }}
+            >
+              {HEART_GRID.flat().map((filled, i) => {
+                if (!filled) {
+                  return <div key={i} className="w-[40px] h-[40px] sm:w-[55px] sm:h-[55px] md:w-[70px] md:h-[70px]" />;
+                }
+                const photo = photos[photoIndex % photos.length];
+                photoIndex++;
+                return (
+                  <div
+                    key={i}
+                    className="w-[40px] h-[40px] sm:w-[55px] sm:h-[55px] md:w-[70px] md:h-[70px] rounded-xl overflow-hidden bg-gray-300 hover:scale-110 hover:z-10 transition-transform duration-300 cursor-pointer"
+                    onClick={() => setSelectedPhoto(photo.name)}
+                  >
+                    <img src={photo.url} alt="love" className="w-full h-full object-cover" loading="lazy" />
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       ) : (
