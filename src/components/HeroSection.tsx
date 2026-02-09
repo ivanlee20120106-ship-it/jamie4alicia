@@ -20,23 +20,23 @@ const HeroSection = () => {
   }, []);
 
   return (
-    <section className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 py-20">
+    <section className="relative z-10 flex flex-col items-center justify-center min-h-screen px-3 sm:px-4 py-12 sm:py-20">
       {/* Names */}
-      <h1 className="font-script text-5xl sm:text-7xl md:text-8xl text-gradient-love glow-gold mb-4 animate-fade-in-up">
+      <h1 className="font-script text-4xl sm:text-5xl md:text-7xl lg:text-8xl text-gradient-love glow-gold mb-3 sm:mb-4 animate-fade-in-up">
         Jamie & Alica
       </h1>
 
       {/* Music Button */}
-      <div className="mb-8 animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
+      <div className="mb-6 sm:mb-8 animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
         <MusicButton />
       </div>
 
       {/* Dates */}
-      <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-10 mb-12 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
+      <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-10 mb-8 sm:mb-12 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
         <DateBadge date="1992.01.06" label="His Birthday" />
         <span className="flex items-center gap-2">
-          <span className="text-love text-2xl animate-heartbeat-left">♥</span>
-          <span className="text-love text-2xl animate-heartbeat-right">♥</span>
+          <span className="text-love text-xl sm:text-2xl animate-heartbeat-left">♥</span>
+          <span className="text-love text-xl sm:text-2xl animate-heartbeat-right">♥</span>
         </span>
         <DateBadge date="1994.10.21" label="Her Birthday" />
       </div>
@@ -47,13 +47,13 @@ const HeroSection = () => {
       </div>
 
       {/* Day counter */}
-      <div className="mt-12 text-center animate-fade-in-up" style={{ animationDelay: "0.6s" }}>
-        <p className="text-muted-foreground text-lg mb-2">We have been together for</p>
+      <div className="mt-8 sm:mt-12 text-center animate-fade-in-up" style={{ animationDelay: "0.6s" }}>
+        <p className="text-muted-foreground text-sm sm:text-lg mb-2">We have been together for</p>
         <div className="flex items-baseline gap-2 justify-center">
-          <span className="font-display text-6xl sm:text-8xl text-gradient-love font-bold glow-gold">
+          <span className="font-display text-5xl sm:text-6xl md:text-8xl text-gradient-love font-bold glow-gold">
             {days}
           </span>
-          <span className="text-2xl text-gold">days</span>
+          <span className="text-xl sm:text-2xl text-gold">days</span>
         </div>
         <p className="text-muted-foreground text-lg mt-2">Every day is the best day ♥</p>
       </div>
