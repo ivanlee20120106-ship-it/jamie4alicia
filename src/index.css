@@ -6,52 +6,52 @@
 
 @layer base {
   :root {
-    /* Cornflower blue + soft pink + lemon chiffon palette */
-    --background: 219 60% 12%;
-    --foreground: 54 80% 94%;
+    /* Cornflower blue + burlywood + peru palette */
+    --background: 219 50% 10%;
+    --foreground: 34 40% 92%;
 
-    --card: 219 45% 16%;
-    --card-foreground: 54 80% 94%;
+    --card: 219 40% 14%;
+    --card-foreground: 34 40% 92%;
 
-    --popover: 219 45% 16%;
-    --popover-foreground: 54 80% 94%;
+    --popover: 219 40% 14%;
+    --popover-foreground: 34 40% 92%;
 
     --primary: 219 79% 66%;
-    --primary-foreground: 219 60% 12%;
+    --primary-foreground: 219 50% 10%;
 
-    --secondary: 351 60% 78%;
-    --secondary-foreground: 219 60% 12%;
+    --secondary: 34 57% 70%;
+    --secondary-foreground: 219 50% 10%;
 
-    --muted: 219 30% 22%;
-    --muted-foreground: 219 20% 65%;
+    --muted: 219 25% 20%;
+    --muted-foreground: 34 20% 62%;
 
-    --accent: 54 100% 90%;
-    --accent-foreground: 219 60% 12%;
+    --accent: 28 57% 53%;
+    --accent-foreground: 34 40% 92%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 219 30% 25%;
-    --input: 219 30% 25%;
+    --border: 219 25% 22%;
+    --input: 219 25% 22%;
     --ring: 219 79% 66%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 219 60% 12%;
-    --sidebar-foreground: 54 80% 94%;
+    --sidebar-background: 219 50% 10%;
+    --sidebar-foreground: 34 40% 92%;
     --sidebar-primary: 219 79% 66%;
-    --sidebar-primary-foreground: 54 80% 94%;
-    --sidebar-accent: 219 45% 20%;
-    --sidebar-accent-foreground: 54 80% 94%;
-    --sidebar-border: 219 30% 25%;
+    --sidebar-primary-foreground: 34 40% 92%;
+    --sidebar-accent: 219 35% 18%;
+    --sidebar-accent-foreground: 34 40% 92%;
+    --sidebar-border: 219 25% 22%;
     --sidebar-ring: 219 79% 66%;
 
     /* Custom tokens */
-    --love: 351 100% 86%;
-    --love-glow: 351 80% 75%;
-    --gold: 54 100% 90%;
-    --gold-soft: 54 60% 75%;
-    --cream: 54 80% 94%;
+    --love: 28 57% 53%;
+    --love-glow: 28 65% 62%;
+    --gold: 34 57% 70%;
+    --gold-soft: 34 40% 58%;
+    --cream: 34 40% 92%;
   }
 }
 
@@ -87,7 +87,7 @@
 
   .text-gradient-love {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--love)));
+    background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--gold)));
   }
 
   .text-gradient-gold {

@@ -9,10 +9,10 @@ const HEART_COLORS = [
   "text-gold",
   "text-blue-300",
   "text-sky-400",
-  "text-pink-300",
+  "text-amber-400",
+  "text-orange-300",
   "text-indigo-300",
-  "text-violet-300",
-  "text-rose-200",
+  "text-yellow-600",
 ];
 
 const FloatingHearts = () => {
