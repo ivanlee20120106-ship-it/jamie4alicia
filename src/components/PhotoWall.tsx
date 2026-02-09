@@ -109,38 +109,29 @@ const PhotoWall = () => {
         </label>
       </div>
 
-      {photos.length > 0 ? (
-        <div className="flex justify-center">
-          <div className="bg-black rounded-2xl p-4 sm:p-6 md:p-10">
-            <div
-              className="grid gap-1.5 sm:gap-2 md:gap-2.5"
-              style={{ gridTemplateColumns: "repeat(9, 1fr)" }}
-            >
-              {HEART_GRID.flat().map((filled, i) => {
-                if (!filled) {
-                  return <div key={i} className="w-[40px] h-[40px] sm:w-[55px] sm:h-[55px] md:w-[70px] md:h-[70px]" />;
-                }
-                const photo = photos[photoIndex % photos.length];
-                photoIndex++;
-                return (
-                  <div
-                    key={i}
-                    className="w-[40px] h-[40px] sm:w-[55px] sm:h-[55px] md:w-[70px] md:h-[70px] rounded-xl overflow-hidden bg-gray-300 hover:scale-110 hover:z-10 transition-transform duration-300 cursor-pointer"
-                    onClick={() => setSelectedPhoto(photo.name)}
-                  >
-                    <img src={photo.url} alt="love" className="w-full h-full object-cover" loading="lazy" />
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+      <div className="flex justify-center">
+        <div
+          className="grid gap-1.5 sm:gap-2 md:gap-2.5"
+          style={{ gridTemplateColumns: "repeat(9, 1fr)" }}
+        >
+          {HEART_GRID.flat().map((filled, i) => {
+            if (!filled) {
+              return <div key={i} className="w-[40px] h-[40px] sm:w-[55px] sm:h-[55px] md:w-[70px] md:h-[70px]" />;
+            }
+            const photo = photos.length > 0 ? photos[photoIndex % photos.length] : null;
+            if (photos.length > 0) photoIndex++;
+            return (
+              <div
+                key={i}
+                className={`w-[40px] h-[40px] sm:w-[55px] sm:h-[55px] md:w-[70px] md:h-[70px] rounded-xl overflow-hidden bg-gray-300 transition-transform duration-300 ${photo ? "hover:scale-110 hover:z-10 cursor-pointer" : ""}`}
+                onClick={() => photo && setSelectedPhoto(photo.name)}
+              >
+                {photo && <img src={photo.url} alt="love" className="w-full h-full object-cover" loading="lazy" />}
+              </div>
+            );
+          })}
         </div>
-      ) : (
-        <div className="flex flex-col items-center gap-4 py-12 sm:py-20">
-          <Heart size={48} className="text-muted-foreground animate-pulse-glow" />
-          <p className="text-muted-foreground text-base sm:text-lg">No photos yet. Upload your sweet moments!</p>
-        </div>
-      )}
+      </div>
 
       {selectedPhoto && (
         <PhotoLightbox
