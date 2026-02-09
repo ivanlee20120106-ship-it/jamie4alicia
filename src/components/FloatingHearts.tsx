@@ -2,17 +2,17 @@ import { useMemo } from "react";
 
 const HEART_COLORS = [
   "text-love",
-  "text-love-glow", 
-  "text-gold",
-  "text-gold-soft",
+  "text-love-glow",
   "text-primary",
+  "text-secondary",
   "text-accent",
-  "text-pink-400",
-  "text-rose-300",
-  "text-orange-400",
-  "text-amber-300",
-  "text-fuchsia-400",
-  "text-red-300",
+  "text-gold",
+  "text-blue-300",
+  "text-sky-400",
+  "text-pink-300",
+  "text-indigo-300",
+  "text-violet-300",
+  "text-rose-200",
 ];
 
 const FloatingHearts = () => {
