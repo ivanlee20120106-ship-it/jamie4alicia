@@ -34,7 +34,10 @@ const HeroSection = () => {
       {/* Dates */}
       <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-10 mb-12 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
         <DateBadge date="1992.01.06" label="His Birthday" />
-        <span className="text-love text-2xl">♥</span>
+        <span className="text-love text-2xl flex items-center gap-1 animate-heartbeat">
+          <span>♥</span>
+          <span>♥</span>
+        </span>
         <DateBadge date="1994.10.21" label="Her Birthday" />
       </div>
 
