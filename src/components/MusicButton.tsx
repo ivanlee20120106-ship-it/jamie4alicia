@@ -10,7 +10,7 @@ interface MusicFile {
 
 const MusicButton = () => {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -77,16 +77,31 @@ const MusicButton = () => {
     audio.addEventListener("loadedmetadata", updateDuration);
     audio.addEventListener("ended", handleEnded);
 
-    if (isPlaying) {
-      audio.play().catch(() => {});
-    }
+    // Auto-play: try immediately, fallback to first user interaction
+    const tryPlay = () => {
+      audio.play().then(() => {
+        setIsPlaying(true);
+      }).catch(() => {
+        const startOnInteraction = () => {
+          audio.play().then(() => setIsPlaying(true)).catch(() => {});
+          ['click', 'touchstart', 'scroll', 'keydown'].forEach(e =>
+            document.removeEventListener(e, startOnInteraction)
+          );
+        };
+        ['click', 'touchstart', 'scroll', 'keydown'].forEach(e =>
+          document.addEventListener(e, startOnInteraction, { once: false })
+        );
+      });
+    };
+
+    tryPlay();
 
     return () => {
       audio.removeEventListener("timeupdate", updateTime);
       audio.removeEventListener("loadedmetadata", updateDuration);
       audio.removeEventListener("ended", handleEnded);
     };
-  }, [currentTrack, tracks, isPlaying]);
+  }, [currentTrack, tracks]);
 
   const togglePlay = () => {
     if (!audioRef.current || tracks.length === 0) return;
