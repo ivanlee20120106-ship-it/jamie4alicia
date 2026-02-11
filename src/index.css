@@ -186,6 +186,16 @@
   to { stroke-dashoffset: 0; }
 }
 
+@keyframes marquee-scroll {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+.animate-marquee {
+  animation: marquee-scroll 8s linear infinite;
+  white-space: nowrap;
+}
+
 .animate-ecg-scroll {
   animation: ecg-scroll 2s linear infinite;
 }
