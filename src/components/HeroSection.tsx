@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import MusicButton from "./MusicButton";
+import HeartbeatHeart from "./HeartbeatHeart";
 
 const getDaysTogether = (): number => {
   // Use UTC+8 (China Standard Time)
@@ -27,12 +28,10 @@ const HeroSection = () => {
       </h1>
 
       {/* Birthdays with hearts in between */}
-      <div className="flex items-center justify-center gap-4 sm:gap-6 md:gap-10 w-full max-w-2xl animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
+      <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-5 md:gap-8 w-full max-w-3xl animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
         <DateBadge date="1992.01.06" label="His Birthday" />
-        <div className="flex items-center gap-1.5 sm:gap-2 px-2 py-1">
-          <span className="text-gold text-2xl sm:text-3xl animate-heartbeat-left origin-center">♥</span>
-          <span className="text-gold text-2xl sm:text-3xl animate-heartbeat-right origin-center">♥</span>
-        </div>
+        <HeartbeatHeart label="TA" bpm={72} variant="left" />
+        <HeartbeatHeart label="你" bpm={75} variant="right" />
         <DateBadge date="1994.10.21" label="Her Birthday" />
       </div>
 
