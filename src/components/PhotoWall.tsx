@@ -22,7 +22,9 @@ interface Photo {
   url: string;
 }
 
-const compressImage = (file: File, maxWidth: number = 600): Promise<Blob> => {
+const MAX_PHOTOS = 34;
+
+const compressImage = (file: File, maxWidth: number = 1200): Promise<Blob> => {
   return new Promise((resolve, reject) => {
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
@@ -35,7 +37,7 @@ const compressImage = (file: File, maxWidth: number = 600): Promise<Blob> => {
       canvas.toBlob(
         (blob) => (blob ? resolve(blob) : reject(new Error("Compression failed"))),
         "image/jpeg",
-        0.8
+        0.9
       );
     };
     img.onerror = reject;
@@ -59,12 +61,14 @@ const PhotoWall = () => {
 
   const fetchPhotos = useCallback(async () => {
     const { data, error } = await supabase.storage.from("photos").list("", {
-      sortBy: { column: "created_at", order: "asc" },
+      sortBy: { column: "created_at", order: "desc" },
     });
     if (error) { console.error(error); return; }
     if (data) {
       const photoList = data
         .filter((f) => f.name !== ".emptyFolderPlaceholder")
+        .slice(0, MAX_PHOTOS)
+        .reverse()
         .map((f) => ({
           name: f.name,
           url: supabase.storage.from("photos").getPublicUrl(f.name).data.publicUrl,
@@ -100,6 +104,9 @@ const PhotoWall = () => {
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
+    const remaining = MAX_PHOTOS - photos.length;
+    if (remaining <= 0) { toast.error(`照片墙已满，最多 ${MAX_PHOTOS} 张照片`); e.target.value = ""; return; }
+    if (files.length > remaining) { toast.error(`最多还能上传 ${remaining} 张照片`); e.target.value = ""; return; }
     setUploading(true);
     try {
       for (const file of Array.from(files)) {
@@ -152,12 +159,12 @@ const PhotoWall = () => {
             if (!filled) {
               return <div key={i} className="w-[40px] h-[40px] sm:w-[55px] sm:h-[55px] md:w-[70px] md:h-[70px]" />;
             }
-            const photo = photos.length > 0 ? photos[photoIndex % photos.length] : null;
-            if (photos.length > 0) photoIndex++;
+            const photo = photoIndex < photos.length ? photos[photoIndex] : null;
+            photoIndex++;
             return (
               <div
                 key={i}
-                className={`w-[40px] h-[40px] sm:w-[55px] sm:h-[55px] md:w-[70px] md:h-[70px] rounded-xl overflow-hidden bg-gray-300 transition-transform duration-300 ${photo ? "hover:scale-110 hover:z-10 cursor-pointer" : ""}`}
+                className={`w-[40px] h-[40px] sm:w-[55px] sm:h-[55px] md:w-[70px] md:h-[70px] rounded-xl overflow-hidden bg-muted/40 transition-transform duration-300 ${photo ? "hover:scale-110 hover:z-10 cursor-pointer" : ""}`}
                 onClick={() => photo && setSelectedPhoto(photo.name)}
               >
                 {photo && <img src={photo.url} alt="love" className="w-full h-full object-cover" loading="lazy" />}
