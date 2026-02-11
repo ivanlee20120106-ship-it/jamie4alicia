@@ -21,17 +21,19 @@ const HeroSection = () => {
   }, []);
 
   return (
-    <section className="relative z-10 flex flex-col items-center justify-center min-h-screen px-3 sm:px-4 py-12 sm:py-20">
+    <section className="relative z-10 flex flex-col items-center justify-center min-h-screen px-3 sm:px-4 pt-24 sm:pt-28 py-12 sm:py-20">
       {/* Names */}
       <h1 className="font-script text-4xl sm:text-5xl md:text-7xl lg:text-8xl text-gradient-love glow-gold mb-8 sm:mb-12 animate-fade-in-up">
         Jamie & Alica
       </h1>
 
       {/* Birthdays with hearts in between */}
-      <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-5 md:gap-8 w-full max-w-3xl animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5 md:gap-8 w-full max-w-3xl animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
         <DateBadge date="1992.01.06" label="His Birthday" />
-        <HeartbeatHeart variant="left" />
-        <HeartbeatHeart variant="right" />
+        <div className="flex items-center gap-3 sm:gap-5 md:gap-8">
+          <HeartbeatHeart variant="left" />
+          <HeartbeatHeart variant="right" />
+        </div>
         <DateBadge date="1994.10.21" label="Her Birthday" />
       </div>
 

@@ -6,10 +6,18 @@ interface HeartbeatHeartProps {
 const ECG_POINTS = "0,30 10,30 20,30 30,30 35,30 38,20 42,40 45,10 48,45 52,25 55,30 65,30 75,30 85,30 90,30 95,30 100,30";
 
 const HeartbeatHeart = ({ variant, className = "" }: HeartbeatHeartProps) => {
-  const colorVar = variant === "left" ? "--love" : "--gold";
+  // Swap colors: left uses gold, right uses love
+  const colorVar = variant === "left" ? "--gold" : "--love";
   const strokeColor = `hsl(var(${colorVar}))`;
-  const glowColor = variant === "left" ? "hsl(var(--love-glow))" : "hsl(var(--gold-soft))";
+  const glowColor = variant === "left" ? "hsl(var(--gold-soft))" : "hsl(var(--love-glow))";
   const animClass = variant === "left" ? "animate-heartbeat-left" : "animate-heartbeat-right";
+  // Right heart is 158/173 ≈ 0.913 of left heart size
+  const sizeClass = variant === "left"
+    ? "w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32"
+    : "w-[73px] h-[73px] sm:w-[102px] sm:h-[102px] md:w-[117px] md:h-[117px]";
+  const ecgWidth = variant === "left"
+    ? "w-20 sm:w-28 md:w-32"
+    : "w-[73px] sm:w-[102px] md:w-[117px]";
 
   return (
     <div className={`flex flex-col items-center ${className}`}>
@@ -20,7 +28,7 @@ const HeartbeatHeart = ({ variant, className = "" }: HeartbeatHeartProps) => {
       >
         <svg
           viewBox="0 0 200 200"
-          className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32"
+          className={sizeClass}
           fill="none"
         >
           <path
@@ -35,7 +43,7 @@ const HeartbeatHeart = ({ variant, className = "" }: HeartbeatHeartProps) => {
       </div>
 
       {/* ECG waveform */}
-      <div className="w-20 sm:w-28 md:w-32 h-8 sm:h-10 mt-1.5 rounded-lg overflow-hidden bg-card/30 backdrop-blur-sm">
+      <div className={`${ecgWidth} h-8 sm:h-10 mt-1.5 rounded-lg overflow-hidden bg-card/30 backdrop-blur-sm`}>
         <svg viewBox="0 0 100 50" preserveAspectRatio="none" className="w-[200%] h-full animate-ecg-scroll">
           <polyline
             points={ECG_POINTS}
