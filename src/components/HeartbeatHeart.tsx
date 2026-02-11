@@ -1,13 +1,11 @@
 interface HeartbeatHeartProps {
-  label: string;
-  bpm: number;
   variant: "left" | "right";
   className?: string;
 }
 
 const ECG_POINTS = "0,30 10,30 20,30 30,30 35,30 38,20 42,40 45,10 48,45 52,25 55,30 65,30 75,30 85,30 90,30 95,30 100,30";
 
-const HeartbeatHeart = ({ label, bpm, variant, className = "" }: HeartbeatHeartProps) => {
+const HeartbeatHeart = ({ variant, className = "" }: HeartbeatHeartProps) => {
   const colorVar = variant === "left" ? "--love" : "--gold";
   const strokeColor = `hsl(var(${colorVar}))`;
   const glowColor = variant === "left" ? "hsl(var(--love-glow))" : "hsl(var(--gold-soft))";
@@ -59,16 +57,6 @@ const HeartbeatHeart = ({ label, bpm, variant, className = "" }: HeartbeatHeartP
           />
         </svg>
       </div>
-
-      {/* Label */}
-      <p className="text-foreground font-display text-base sm:text-lg font-semibold mt-2" style={{ textShadow: `0 0 10px ${glowColor}` }}>
-        {label}
-      </p>
-
-      {/* BPM */}
-      <p className="text-muted-foreground text-xs sm:text-sm">
-        <span className="font-bold text-foreground">{bpm}</span> BPM
-      </p>
     </div>
   );
 };

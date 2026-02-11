@@ -30,8 +30,8 @@ const HeroSection = () => {
       {/* Birthdays with hearts in between */}
       <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-5 md:gap-8 w-full max-w-3xl animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
         <DateBadge date="1992.01.06" label="His Birthday" />
-        <HeartbeatHeart label="TA" bpm={72} variant="left" />
-        <HeartbeatHeart label="你" bpm={75} variant="right" />
+        <HeartbeatHeart variant="left" />
+        <HeartbeatHeart variant="right" />
         <DateBadge date="1994.10.21" label="Her Birthday" />
       </div>
 
