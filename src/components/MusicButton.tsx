@@ -10,6 +10,7 @@ const MusicButton = () => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [tracks, setTracks] = useState<MusicFile[]>([]);
   const [currentTrack, setCurrentTrack] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const DEFAULT_TRACK: MusicFile = {
     name: "I Love You So (Instrumental)",
@@ -58,9 +59,11 @@ const MusicButton = () => {
     audio.addEventListener("ended", handleEnded);
 
     const tryPlay = () => {
-      audio.play().catch(() => {
+      audio.play().then(() => {
+        setIsPlaying(true);
+      }).catch(() => {
         const startOnInteraction = () => {
-          audio.play().catch(() => {});
+          audio.play().then(() => setIsPlaying(true)).catch(() => {});
           ['click', 'touchstart', 'scroll', 'keydown'].forEach(e =>
             document.removeEventListener(e, startOnInteraction)
           );
@@ -78,7 +81,29 @@ const MusicButton = () => {
     };
   }, [currentTrack, tracks]);
 
-  return <audio ref={audioRef} />;
+  const toggle = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (audio.paused) {
+      audio.play().then(() => setIsPlaying(true)).catch(() => {});
+    } else {
+      audio.pause();
+      setIsPlaying(false);
+    }
+  };
+
+  return (
+    <>
+      <audio ref={audioRef} />
+      <button
+        onClick={toggle}
+        className="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-background/60 backdrop-blur-md border border-border/50 flex items-center justify-center text-2xl shadow-lg hover:bg-background/80 transition-all duration-300"
+        aria-label={isPlaying ? "暂停音乐" : "播放音乐"}
+      >
+        {isPlaying ? "🔊" : "🔇"}
+      </button>
+    </>
+  );
 };
 
 export default MusicButton;
