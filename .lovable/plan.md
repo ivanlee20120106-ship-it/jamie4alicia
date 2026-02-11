@@ -1,45 +1,35 @@
 
 
-# 添加音乐开关按钮（🔊/🔇）
+# 音乐按钮图标更换 + Bug 修复
 
-## 改动内容
+## 1. 音乐按钮图标更换
 
-### `src/components/MusicButton.tsx`
+将 emoji（🔊/🔇）替换为 lucide-react 的浪漫风格图标，与网站整体氛围一致：
 
-参考用户提供的 HTML 代码，在现有纯后台播放基础上添加一个浮动的音量切换按钮：
+- **播放中**：使用 `Music` 图标（音符），金色（`text-gold`）
+- **已暂停**：使用 `VolumeOff` 图标，灰色（`text-muted-foreground`）
 
-1. **新增 `isPlaying` 状态**：追踪当前播放/暂停状态
-2. **添加切换按钮**：固定在页面右下角，显示 🔊（播放中）或 🔇（已暂停）
-3. **点击切换逻辑**：
-   - 播放中 -> 点击暂停，图标变 🔇
-   - 已暂停 -> 点击播放，图标变 🔊
-4. **自动播放时同步状态**：`tryPlay` 成功后设置 `isPlaying = true`
-5. **保留现有逻辑不变**：云端曲目获取、循环播放、浏览器自动播放降级处理全部保留
+按钮样式保持不变（圆形、毛玻璃、fixed bottom-6 right-6）。
 
-### 按钮样式
+### 改动文件：`src/components/MusicButton.tsx`
+- 导入 `Music` 和 `VolumeOff` from `lucide-react`
+- 将 emoji 替换为对应图标组件
 
-- 固定定位右下角 (`fixed bottom-6 right-6`)
-- 半透明背景 + 毛玻璃效果，与网站整体风格一致
-- `z-50` 确保始终在最上层
+## 2. Bug 修复：PhotoWall 图片验证
 
-### 技术细节
+### 问题
+`validateImageFile` 中检测 WebP 格式时访问了 `bytes[8]`，但 `file.slice(0, 8)` 只读取了前 8 个字节（索引 0-7），`bytes[8]` 始终为 `undefined`，导致 WebP 文件永远无法通过魔术字节验证。
 
-```text
-组件结构:
-  <audio ref={audioRef} />          -- 隐藏的音频元素（不变）
-  <button onClick={toggle}>        -- 新增浮动按钮
-    🔊 或 🔇
-  </button>
+### 修复
+将 `file.slice(0, 8)` 改为 `file.slice(0, 12)`，确保能读取到 WebP 的 RIFF 标识字节。
 
-toggle 逻辑:
-  if (audio.paused) {
-    audio.play() -> isPlaying = true
-  } else {
-    audio.pause() -> isPlaying = false
-  }
-```
+### 改动文件：`src/components/PhotoWall.tsx`
+- 第 90 行：`file.slice(0, 8)` 改为 `file.slice(0, 12)`
 
-### 改动文件
+## 改动总览
 
-- `src/components/MusicButton.tsx`：添加 `isPlaying` 状态和浮动切换按钮
+| 文件 | 改动内容 |
+|------|---------|
+| `MusicButton.tsx` | 图标从 emoji 换为 lucide-react Music/VolumeOff |
+| `PhotoWall.tsx` | 修复 WebP 魔术字节检测的切片长度 |
 
