@@ -22,35 +22,32 @@ const HeroSection = () => {
   return (
     <section className="relative z-10 flex flex-col items-center justify-center min-h-screen px-3 sm:px-4 py-12 sm:py-20">
       {/* Names */}
-      <h1 className="font-script text-4xl sm:text-5xl md:text-7xl lg:text-8xl text-gradient-love glow-gold mb-6 sm:mb-8 animate-fade-in-up">
+      <h1 className="font-script text-4xl sm:text-5xl md:text-7xl lg:text-8xl text-gradient-love glow-gold mb-8 sm:mb-12 animate-fade-in-up">
         Jamie & Alica
       </h1>
 
-      {/* Heartbeat + Music + Birthdays Row */}
-      <div className="flex flex-col items-center gap-6 sm:gap-8 mb-8 sm:mb-10 w-full max-w-2xl animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
-        {/* Birthdays with hearts in between */}
-        <div className="flex items-center justify-center gap-4 sm:gap-6 md:gap-10 w-full">
-          <DateBadge date="1992.01.06" label="His Birthday" />
-          <div className="flex items-center gap-1.5 sm:gap-2 px-2 py-1">
-            <span className="text-gold text-2xl sm:text-3xl animate-heartbeat-left origin-center">♥</span>
-            <span className="text-gold text-2xl sm:text-3xl animate-heartbeat-right origin-center">♥</span>
-          </div>
-          <DateBadge date="1994.10.21" label="Her Birthday" />
+      {/* Birthdays with hearts in between */}
+      <div className="flex items-center justify-center gap-4 sm:gap-6 md:gap-10 w-full max-w-2xl animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
+        <DateBadge date="1992.01.06" label="His Birthday" />
+        <div className="flex items-center gap-1.5 sm:gap-2 px-2 py-1">
+          <span className="text-gold text-2xl sm:text-3xl animate-heartbeat-left origin-center">♥</span>
+          <span className="text-gold text-2xl sm:text-3xl animate-heartbeat-right origin-center">♥</span>
         </div>
+        <DateBadge date="1994.10.21" label="Her Birthday" />
+      </div>
 
-        {/* Music Button - centered below birthdays */}
-        <div className="relative">
-          <MusicButton />
-        </div>
+      {/* Music Button */}
+      <div className="mt-6 sm:mt-8 animate-fade-in-up" style={{ animationDelay: "0.25s" }}>
+        <MusicButton />
       </div>
 
       {/* Anniversary */}
-      <div className="animate-fade-in-up" style={{ animationDelay: "0.35s" }}>
+      <div className="mt-8 sm:mt-10 animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
         <DateBadge date="2022.09.17" label="Anniversary" large />
       </div>
 
       {/* Day counter */}
-      <div className="mt-8 sm:mt-12 text-center animate-fade-in-up" style={{ animationDelay: "0.55s" }}>
+      <div className="mt-8 sm:mt-12 text-center animate-fade-in-up" style={{ animationDelay: "0.6s" }}>
         <p className="text-muted-foreground text-sm sm:text-lg mb-2">We have been together for</p>
         <div className="flex items-baseline gap-2 justify-center">
           <span className="font-display text-5xl sm:text-6xl md:text-8xl text-gradient-love font-bold glow-gold">
