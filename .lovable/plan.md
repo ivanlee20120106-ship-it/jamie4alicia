@@ -1,63 +1,30 @@
 
 
-# 网站打开自动播放并循环
+# 移除音乐播放按钮，保留纯后台循环播放
 
 ## 问题
 
-当前需要用户点击 "Play Music" 按钮才能开始播放音乐，用户希望打开网站后自动播放并循环。
-
-## 注意事项
-
-现代浏览器（Chrome、Safari、Firefox）默认阻止自动播放带声音的音频。常见的解决方案是：
-- 先尝试自动播放
-- 如果被浏览器阻止，则监听用户的第一次点击/触摸/滚动等交互事件，交互后立即自动开始播放
+用户希望去掉截图中红框标注的 "Now Playing" 音乐按钮 UI，只保留后台自动播放和循环播放功能。
 
 ## 具体改动
 
-### `src/components/MusicButton.tsx`
+### 1. `src/components/MusicButton.tsx`
 
-1. **组件加载时自动播放**：在 `useEffect` 中，当 tracks 加载完成后，自动设置 `isPlaying = true` 并调用 `audio.play()`
+- 删除所有可见的 UI 元素（按钮、播放面板、上传功能）
+- 只保留 `<audio>` 标签和自动播放/循环逻辑
+- 删除 `isOpen`、`uploading`、`user` 等仅与 UI 相关的状态
+- 保留 `tracks`、`currentTrack`、`audioRef` 和自动播放 + 循环的 `useEffect`
+- 组件只渲染一个隐藏的 `<audio>` 元素，不渲染任何可见内容
 
-2. **处理浏览器自动播放限制**：如果 `audio.play()` 被拒绝（返回 rejected promise），添加一个全局的一次性事件监听器（`click` / `touchstart` / `scroll`），在用户首次交互时自动开始播放
+### 2. `src/components/HeroSection.tsx`
 
-3. **保持循环播放逻辑不变**：现有的 `handleEnded` 已实现单曲循环（`audio.currentTime = 0; audio.play()`）
+- 移除 MusicButton 的包裹 `div`（含 `relative z-20 mt-6`）
+- 将 `<MusicButton />` 直接放在 HeroSection 内部（无需包裹容器），因为它不再有可见 UI
+- 或者将 MusicButton 移到更上层（如 Index.tsx）也可以，但保持在 HeroSection 内最简单
 
-4. **默认展开播放面板**：将 `isOpen` 初始值改为 `true`，让用户一进来就能看到播放状态
+### 3. 不需要改动的部分
 
-### 核心代码逻辑
-
-```
-// 在 tracks 加载完成后的 useEffect 中：
-useEffect(() => {
-  if (tracks.length === 0 || !audioRef.current) return;
-  
-  const audio = audioRef.current;
-  audio.src = tracks[currentTrack]?.url || "";
-  
-  // 自动尝试播放
-  const tryPlay = () => {
-    audio.play().then(() => {
-      setIsPlaying(true);
-    }).catch(() => {
-      // 浏览器阻止了自动播放，等待用户交互
-      const startOnInteraction = () => {
-        audio.play().then(() => setIsPlaying(true));
-        ['click','touchstart','scroll','keydown'].forEach(e => 
-          document.removeEventListener(e, startOnInteraction)
-        );
-      };
-      ['click','touchstart','scroll','keydown'].forEach(e => 
-        document.addEventListener(e, startOnInteraction, { once: false })
-      );
-    });
-  };
-  
-  tryPlay();
-  // ... 其余事件监听保持不变
-}, [tracks, currentTrack]);
-```
-
-### 改动文件
-
-- `src/components/MusicButton.tsx`：添加自动播放逻辑和浏览器限制的降级处理
+- `src/index.css` 中的 marquee 动画可以保留（不影响功能），或清理掉（因为不再使用）
+- 自动播放逻辑（`tryPlay` + 浏览器交互降级）完全保留
+- 循环播放逻辑（`handleEnded`）完全保留
 
