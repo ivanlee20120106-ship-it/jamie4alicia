@@ -106,7 +106,7 @@ const PhotoWall = () => {
         if (file.size > 10 * 1024 * 1024) { toast.error(`${file.name} exceeds 10MB limit`); continue; }
         if (!(await validateImageFile(file))) continue;
         const compressed = await compressImage(file);
-        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+        const fileName = `${crypto.randomUUID()}.jpg`;
         const { error } = await supabase.storage.from("photos").upload(fileName, compressed, { contentType: "image/jpeg" });
         if (error) { toast.error(`Upload failed: ${file.name}`); console.error(error); }
       }

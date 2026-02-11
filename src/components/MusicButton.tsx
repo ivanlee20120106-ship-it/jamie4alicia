@@ -130,7 +130,7 @@ const MusicButton = () => {
     if (!(await validateAudioFile(file))) return;
     setUploading(true);
     const safeExt = file.name.toLowerCase().slice(file.name.lastIndexOf(".")) || ".mp3";
-    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}${safeExt}`;
+    const fileName = `${crypto.randomUUID()}${safeExt}`;
     const { error } = await supabase.storage.from("music").upload(fileName, file, {
       contentType: file.type || "audio/mpeg",
     });
