@@ -191,14 +191,20 @@ const MusicButton = () => {
       {/* Music Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-6 py-3 rounded-full bg-card/60 backdrop-blur-sm border border-border/50 hover:bg-card/80 transition-all duration-300 group"
+        className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-card/60 backdrop-blur-sm border border-border/50 hover:bg-card/80 transition-all duration-300 group"
       >
-        <Music size={20} className={`text-gold ${isPlaying ? "animate-pulse" : ""}`} />
-        <span className="text-foreground text-sm">
-          {isPlaying ? "Now Playing" : "Play Music"}
-        </span>
+        <Music size={18} className={`text-gold shrink-0 ${isPlaying ? "animate-pulse" : ""}`} />
+        {isPlaying && tracks.length > 0 ? (
+          <div className="overflow-hidden max-w-[140px] sm:max-w-[180px]">
+            <span className="text-foreground text-sm animate-marquee inline-block">
+              {tracks[currentTrack]?.name || "Now Playing"}
+            </span>
+          </div>
+        ) : (
+          <span className="text-foreground text-sm">Play Music</span>
+        )}
         {isPlaying && (
-          <span className="flex gap-0.5">
+          <span className="flex gap-0.5 shrink-0">
             <span className="w-1 h-3 bg-gold rounded-full animate-pulse" style={{ animationDelay: "0ms" }} />
             <span className="w-1 h-4 bg-gold rounded-full animate-pulse" style={{ animationDelay: "150ms" }} />
             <span className="w-1 h-2 bg-gold rounded-full animate-pulse" style={{ animationDelay: "300ms" }} />
