@@ -38,7 +38,7 @@ const HeroSection = () => {
       </div>
 
       {/* Music Button */}
-      <div className="mt-6 sm:mt-8 animate-fade-in-up" style={{ animationDelay: "0.25s" }}>
+      <div className="relative z-20 mt-6 sm:mt-8 animate-fade-in-up" style={{ animationDelay: "0.25s" }}>
         <MusicButton />
       </div>
 

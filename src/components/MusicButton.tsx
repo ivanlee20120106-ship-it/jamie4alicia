@@ -193,7 +193,7 @@ const MusicButton = () => {
 
       {/* Music Player Panel */}
       {isOpen && (
-        <div className="absolute top-full mt-4 left-1/2 -translate-x-1/2 w-72 sm:w-80 bg-card/95 backdrop-blur-lg rounded-xl border border-border/50 p-4 shadow-2xl z-50 animate-fade-in">
+        <div className="absolute bottom-full mb-4 left-1/2 -translate-x-1/2 w-72 sm:w-80 bg-card/95 backdrop-blur-lg rounded-xl border border-border/50 p-4 shadow-2xl z-50 animate-fade-in">
           {/* Close button */}
           <button
             onClick={() => setIsOpen(false)}
