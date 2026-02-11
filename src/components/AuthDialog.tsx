@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { Heart, LogOut, X } from "lucide-react";
 import { toast } from "sonner";
 import type { User } from "@supabase/supabase-js";
@@ -60,7 +61,7 @@ const AuthDialog = ({ user, onSignIn, onSignUp, onSignOut }: AuthDialogProps) =>
         <span className="hidden sm:inline text-sm text-gold font-body">Sign In</span>
       </button>
 
-      {isOpen && (
+      {isOpen && createPortal(
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setIsOpen(false)}>
           <div className="bg-card border border-border rounded-xl p-6 w-full max-w-sm shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-4">
@@ -103,7 +104,8 @@ const AuthDialog = ({ user, onSignIn, onSignUp, onSignOut }: AuthDialogProps) =>
               {isSignUp ? "Already have an account? Sign in" : "Need an account? Sign up"}
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
