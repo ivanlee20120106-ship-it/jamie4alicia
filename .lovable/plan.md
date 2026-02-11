@@ -1,22 +1,54 @@
 
 
-# 修复登录弹窗居中问题
+# 照片墙改版计划
 
-## 问题原因
+## 当前问题
 
-`AuthDialog` 组件渲染在 `Header` 内部，而 `Header` 使用了 `fixed` 定位 + `backdrop-blur-sm`。这会创建一个新的 CSS 包含块（containing block），导致 `AuthDialog` 中的 `fixed inset-0` 的遮罩层不再相对于视口定位，而是相对于 Header 定位，所以弹窗出现在页面顶部而非居中。
+1. 当前照片会循环重复填充所有 36 个心形格子（`photos[photoIndex % photos.length]`），而非每张照片占一个独立格子
+2. 压缩分辨率偏低（maxWidth=600），缩略图不够清晰
+3. 没有限制照片数量，也没有"取最新 34 张"的逻辑
 
-## 解决方案
+## 改动方案
 
-使用 React Portal 将弹窗渲染到 `document.body` 上，脱离 Header 的 CSS 上下文。
+### 文件: `src/components/PhotoWall.tsx`
 
-## 改动
+**1. 照片获取逻辑**
+- 排序改为 `created_at desc`（最新在前），取全部后截取前 34 张
+- 再反转回时间正序填充心形，确保最新照片始终在墙上
 
-**文件**: `src/components/AuthDialog.tsx`
+**2. 填充逻辑**
+- 移除 `photos[photoIndex % photos.length]` 的循环逻辑
+- 改为：每个填充格子按顺序取 1 张照片，没有照片则保留灰色空白占位
+- 心形网格保持 36 格不变（保证完美心形），最多填充 34 张照片，剩余格子为空
 
-- 引入 `ReactDOM.createPortal`
-- 将 `isOpen` 时渲染的遮罩层 + 弹窗内容包裹在 `createPortal(..., document.body)` 中
-- 其余代码（按钮、表单逻辑）不变
+**3. 提高缩略图清晰度**
+- `compressImage` 的 `maxWidth` 从 600 提高到 1200
+- JPEG 质量从 0.8 提高到 0.9
+- 缩略图 CSS 已使用 `object-cover` 自动居中裁剪，无需额外处理
 
-这样无论 AuthDialog 在组件树中嵌套多深，弹窗始终挂载到 body 层级，`fixed inset-0 flex items-center justify-center` 就能正确相对视口居中。
+**4. 上传数量限制**
+- 上传前检查当前照片数 + 新上传数是否超过 34，超过则提示用户
+
+### 文件: `src/components/PhotoLightbox.tsx`
+
+- 保持不变，已有点击查看原图 + 删除功能
+
+## 技术细节
+
+```text
+心形网格（36格，9列 x 7行）:
+  . . X X . X X . .    (4)
+  . X X X X X X X .    (7)
+  X X X X X X X X X    (9)
+  . X X X X X X X .    (7)
+  . . X X X X X . .    (5)
+  . . . X X X . . .    (3)
+  . . . . X . . . .    (1)
+                总计 = 36
+
+填充规则:
+- 最多填入 34 张照片（按上传时间排列）
+- 第 35、36 格保持空白占位
+- 少于 34 张时，后续格子也保持空白
+```
 
