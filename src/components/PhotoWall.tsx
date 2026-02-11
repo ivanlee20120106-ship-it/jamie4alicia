@@ -87,7 +87,7 @@ const PhotoWall = () => {
       toast.error(`${file.name}: Only image files (JPG, PNG, GIF, WebP) are allowed`);
       return false;
     }
-    const buffer = await file.slice(0, 8).arrayBuffer();
+    const buffer = await file.slice(0, 12).arrayBuffer();
     const bytes = new Uint8Array(buffer);
     const isJPEG = bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF;
     const isPNG = bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47;
