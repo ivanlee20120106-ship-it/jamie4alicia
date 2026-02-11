@@ -1,24 +1,38 @@
 
 
-# 部署音乐到 Play Music
+# 音乐播放器与 Anniversary 区域分离
 
-## 概述
+## 问题
 
-将上传的 MP3 文件（The Walters - I Love You So Instrumental）部署到音乐存储中，MusicButton 组件会自动加载并播放。现有代码已支持单曲循环和暂停功能。
+从截图可以看到，音乐播放器的展开面板（包含进度条、播放控制）与下方的 "2022.09.17 Anniversary" 区域重叠，视觉上混在一起。
 
-## 步骤
+## 解决方案
 
-1. **复制文件到项目目录**：将用户上传的 MP3 文件复制到 `public/` 目录作为中转
-2. **上传到存储**：通过代码将 MP3 文件上传到 Lovable Cloud 的 music 存储桶中
-3. **无需修改播放逻辑**：当前 `MusicButton.tsx` 已实现：
-   - 单曲时自动循环播放（`audio.currentTime = 0; audio.play()`）
-   - 播放/暂停切换按钮
-   - 自动从存储桶加载曲目列表
+### 1. 调整 HeroSection 布局（`src/components/HeroSection.tsx`）
 
-## 技术细节
+- 将 MusicButton 包裹在一个 `relative` 容器中，并增加足够的 `z-index`，确保播放面板浮在 Anniversary 上方而非穿透
+- 增加 MusicButton 与 Anniversary 之间的间距（`mt-10` 或更大），为播放面板展开留出空间
 
-- 将 MP3 文件复制到 `public/music/` 目录
-- 在页面加载时，通过一段初始化逻辑检查存储桶中是否已有该歌曲，若没有则自动上传
-- 或者更简单的方式：直接在组件中添加一个默认曲目的 fallback，当存储桶为空时播放本地文件
-- 推荐方案：将文件上传到 Supabase storage music 桶，组件无需任何改动即可自动加载播放
+### 2. 调整 MusicButton 面板定位（`src/components/MusicButton.tsx`）
+
+- 播放面板改为向上弹出（`bottom-full mb-4`）而非向下（`top-full mt-4`），这样展开时不会遮挡下方的 Anniversary 区域
+- 或者保持向下弹出，但增加 MusicButton 父容器的 `z-50`，确保面板始终浮在 Anniversary 之上且有明确的视觉分层
+
+**推荐方案：面板向上弹出**，这样无论间距多大都不会覆盖 Anniversary。
+
+### 3. 播放功能确认
+
+现有代码已满足需求：
+- 点击 Play Music 自动循环播放 "I Love You So (Instrumental)"（单曲时 `handleEnded` 自动重播）
+- 播放/暂停按钮正常工作
+- 上一首/下一首按钮在多曲目时启用
+
+## 具体改动
+
+### `src/components/MusicButton.tsx`
+- 将面板定位从 `absolute top-full mt-4` 改为 `absolute bottom-full mb-4`，使面板向上展开
+
+### `src/components/HeroSection.tsx`
+- 为 MusicButton 的包裹 `div` 添加 `relative z-20`，确保面板层级高于 Anniversary
+- Anniversary 区域保持不变
 
