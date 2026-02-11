@@ -158,22 +158,22 @@
 }
 
 @keyframes heartbeat-left {
-  0%   { transform: scale(1); }
-  8%   { transform: scale(1.35); }
-  16%  { transform: scale(0.95); }
-  24%  { transform: scale(1.2); }
-  32%  { transform: scale(1); }
-  100% { transform: scale(1); }
+  0%   { transform: scale(1.73); }
+  8%   { transform: scale(2.34); }
+  16%  { transform: scale(1.64); }
+  24%  { transform: scale(2.08); }
+  32%  { transform: scale(1.73); }
+  100% { transform: scale(1.73); }
 }
 
 @keyframes heartbeat-right {
-  0%   { transform: scale(1); }
-  6%   { transform: scale(1); }
-  14%  { transform: scale(1.35); }
-  22%  { transform: scale(0.95); }
-  30%  { transform: scale(1.2); }
-  38%  { transform: scale(1); }
-  100% { transform: scale(1); }
+  0%   { transform: scale(1.58); }
+  6%   { transform: scale(1.58); }
+  14%  { transform: scale(2.13); }
+  22%  { transform: scale(1.50); }
+  30%  { transform: scale(1.90); }
+  38%  { transform: scale(1.58); }
+  100% { transform: scale(1.58); }
 }
 
 .animate-heartbeat-left {
