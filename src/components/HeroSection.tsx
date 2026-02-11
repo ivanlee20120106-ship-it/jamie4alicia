@@ -28,14 +28,10 @@ const HeroSection = () => {
       </h1>
 
       {/* Birthdays with hearts in between */}
-      <div className="flex flex-col items-center gap-3 sm:gap-4 w-full max-w-3xl animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
-        {/* Row 1: His Birthday + Hearts */}
-        <div className="flex items-center justify-center gap-3 sm:gap-5 md:gap-8">
-          <DateBadge date="1992.01.06" label="His Birthday" />
-          <HeartbeatHeart variant="left" />
-          <HeartbeatHeart variant="right" />
-        </div>
-        {/* Row 2: Her Birthday */}
+      <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-5 md:gap-8 w-full max-w-3xl animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
+        <DateBadge date="1992.01.06" label="His Birthday" />
+        <HeartbeatHeart variant="left" />
+        <HeartbeatHeart variant="right" />
         <DateBadge date="1994.10.21" label="Her Birthday" />
       </div>
 
