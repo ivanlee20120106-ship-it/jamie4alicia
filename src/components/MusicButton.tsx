@@ -10,7 +10,7 @@ interface MusicFile {
 
 const MusicButton = () => {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
