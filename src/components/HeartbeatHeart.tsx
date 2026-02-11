@@ -43,7 +43,7 @@ const HeartbeatHeart = ({ variant, className = "" }: HeartbeatHeartProps) => {
       </div>
 
       {/* ECG waveform */}
-      <div className="w-20 sm:w-28 md:w-32 h-8 sm:h-10 mt-1.5 rounded-lg overflow-hidden bg-card/30 backdrop-blur-sm">
+      <div className={`${ecgWidth} h-8 sm:h-10 mt-1.5 rounded-lg overflow-hidden bg-card/30 backdrop-blur-sm`}>
         <svg viewBox="0 0 100 50" preserveAspectRatio="none" className="w-[200%] h-full animate-ecg-scroll">
           <polyline
             points={ECG_POINTS}
