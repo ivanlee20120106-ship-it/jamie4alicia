@@ -37,10 +37,7 @@ const HeroSection = () => {
         <DateBadge date="1994.10.21" label="Her Birthday" />
       </div>
 
-      {/* Music Button */}
-      <div className="relative z-20 mt-6 sm:mt-8 animate-fade-in-up" style={{ animationDelay: "0.25s" }}>
-        <MusicButton />
-      </div>
+      <MusicButton />
 
       {/* Anniversary */}
       <div className="mt-8 sm:mt-10 animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
