@@ -21,18 +21,25 @@ const HeroSection = () => {
   }, []);
 
   return (
-    <section className="relative z-10 flex flex-col items-center justify-center min-h-screen px-3 sm:px-4 py-12 sm:py-20">
+    <section className="relative z-10 flex flex-col items-center justify-center min-h-screen px-3 sm:px-4 pt-20 pb-12 sm:pt-24 sm:pb-20">
       {/* Names */}
       <h1 className="font-script text-4xl sm:text-5xl md:text-7xl lg:text-8xl text-gradient-love glow-gold mb-8 sm:mb-12 animate-fade-in-up">
         Jamie & Alica
       </h1>
 
       {/* Birthdays with hearts in between */}
-      <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-5 md:gap-8 w-full max-w-3xl animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
-        <DateBadge date="1992.01.06" label="His Birthday" />
-        <HeartbeatHeart variant="left" />
-        <HeartbeatHeart variant="right" />
-        <DateBadge date="1994.10.21" label="Her Birthday" />
+      <div className="flex flex-col items-center gap-3 sm:gap-5 md:gap-0 md:flex-row md:gap-8 w-full max-w-3xl animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
+        {/* Mobile: two rows; Desktop: single row */}
+        <div className="flex items-center justify-center gap-3 sm:gap-5 md:contents">
+          <DateBadge date="1992.01.06" label="His Birthday" />
+          <span className="hidden md:inline-flex"><HeartbeatHeart variant="left" /></span>
+          <span className="hidden md:inline-flex"><HeartbeatHeart variant="right" /></span>
+          <DateBadge date="1994.10.21" label="Her Birthday" />
+        </div>
+        <div className="flex items-center justify-center gap-3 md:hidden">
+          <HeartbeatHeart variant="left" />
+          <HeartbeatHeart variant="right" />
+        </div>
       </div>
 
       {/* Music Button */}
