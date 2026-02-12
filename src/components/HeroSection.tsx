@@ -69,7 +69,7 @@ const HeroSection = () => {
           </span>
           <span className="text-xl sm:text-2xl text-gold">days</span>
         </div>
-        <p className="text-muted-foreground text-lg mt-2">Every day is the best day ♥</p>
+        <p className="text-muted-foreground text-lg mt-2">Every day is the best day</p>
       </div>
 
       {/* Scroll hint */}
