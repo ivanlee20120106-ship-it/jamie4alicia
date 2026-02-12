@@ -16,8 +16,24 @@ const HeroSection = () => {
   const [days, setDays] = useState(getDaysTogether());
 
   useEffect(() => {
-    const timer = setInterval(() => setDays(getDaysTogether()), 60000);
-    return () => clearInterval(timer);
+    const getMsUntilUtc8Midnight = () => {
+      const now = new Date();
+      const utc8Ms = now.getTime() + (8 * 60 - now.getTimezoneOffset()) * 60000;
+      const utc8Now = new Date(utc8Ms);
+      const tomorrow = new Date(utc8Now.getFullYear(), utc8Now.getMonth(), utc8Now.getDate() + 1);
+      return tomorrow.getTime() - utc8Now.getTime() + 1000; // +1s buffer
+    };
+
+    let timerId: ReturnType<typeof setTimeout>;
+    const scheduleRefresh = () => {
+      timerId = setTimeout(() => {
+        setDays(getDaysTogether());
+        scheduleRefresh();
+      }, getMsUntilUtc8Midnight());
+    };
+    scheduleRefresh();
+
+    return () => clearTimeout(timerId);
   }, []);
 
   return (
