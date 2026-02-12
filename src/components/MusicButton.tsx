@@ -42,11 +42,23 @@ const MusicButton = () => {
     fetchTracks();
   }, [fetchTracks]);
 
+  const interactionListenerRef = useRef<(() => void) | null>(null);
+  const INTERACTION_EVENTS = ['click', 'touchstart', 'pointerdown', 'scroll', 'keydown'];
+
+  const removeInteractionListeners = useCallback(() => {
+    const listener = interactionListenerRef.current;
+    if (listener) {
+      INTERACTION_EVENTS.forEach(e => document.removeEventListener(e, listener));
+      interactionListenerRef.current = null;
+    }
+  }, []);
+
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || tracks.length === 0) return;
 
     audio.src = tracks[currentTrack]?.url || "";
+    audio.load();
 
     const handleEnded = () => {
       if (tracks.length > 1) {
@@ -62,15 +74,20 @@ const MusicButton = () => {
     const tryPlay = () => {
       audio.play().then(() => {
         setIsPlaying(true);
+        removeInteractionListeners();
       }).catch(() => {
+        removeInteractionListeners();
         const startOnInteraction = () => {
-          audio.play().then(() => setIsPlaying(true)).catch(() => {});
-          ['click', 'touchstart', 'scroll', 'keydown'].forEach(e =>
-            document.removeEventListener(e, startOnInteraction)
-          );
+          audio.play().then(() => {
+            setIsPlaying(true);
+            removeInteractionListeners();
+          }).catch(() => {
+            // keep listeners for retry
+          });
         };
-        ['click', 'touchstart', 'scroll', 'keydown'].forEach(e =>
-          document.addEventListener(e, startOnInteraction, { once: false })
+        interactionListenerRef.current = startOnInteraction;
+        INTERACTION_EVENTS.forEach(e =>
+          document.addEventListener(e, startOnInteraction, { passive: true })
         );
       });
     };
@@ -79,8 +96,9 @@ const MusicButton = () => {
 
     return () => {
       audio.removeEventListener("ended", handleEnded);
+      removeInteractionListeners();
     };
-  }, [currentTrack, tracks]);
+  }, [currentTrack, tracks, removeInteractionListeners]);
 
   const toggle = () => {
     const audio = audioRef.current;
