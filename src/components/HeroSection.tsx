@@ -3,13 +3,12 @@ import MusicButton from "./MusicButton";
 import HeartbeatHeart from "./HeartbeatHeart";
 
 const getDaysTogether = (): number => {
-  // Use UTC+8 (China Standard Time)
   const now = new Date();
-  const utc8Now = new Date(now.getTime() + (8 * 60 - now.getTimezoneOffset()) * 60000);
-  const utc8Today = new Date(utc8Now.getFullYear(), utc8Now.getMonth(), utc8Now.getDate());
-  const annivDate = new Date(2022, 8, 17); // Month is 0-indexed
-  const diffMs = utc8Today.getTime() - annivDate.getTime();
-  return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const utc8Ms = now.getTime() + 8 * 3600000;
+  const todayDays = Math.floor(utc8Ms / 86400000);
+  const annivUtc8Ms = Date.UTC(2022, 8, 17) + 8 * 3600000;
+  const annivDays = Math.floor(annivUtc8Ms / 86400000);
+  return todayDays - annivDays;
 };
 
 const HeroSection = () => {
@@ -18,10 +17,9 @@ const HeroSection = () => {
   useEffect(() => {
     const getMsUntilUtc8Midnight = () => {
       const now = new Date();
-      const utc8Ms = now.getTime() + (8 * 60 - now.getTimezoneOffset()) * 60000;
-      const utc8Now = new Date(utc8Ms);
-      const tomorrow = new Date(utc8Now.getFullYear(), utc8Now.getMonth(), utc8Now.getDate() + 1);
-      return tomorrow.getTime() - utc8Now.getTime() + 1000; // +1s buffer
+      const utc8Ms = now.getTime() + 8 * 3600000;
+      const msSinceMidnight = utc8Ms % 86400000;
+      return 86400000 - msSinceMidnight + 1000; // +1s buffer
     };
 
     let timerId: ReturnType<typeof setTimeout>;
