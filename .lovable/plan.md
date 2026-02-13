@@ -1,49 +1,46 @@
 
 
-# 修复纪念日计数的时区 Bug
+# 图片上传功能 Bug 检查报告与修复计划
 
-## 问题
+## 发现的 Bug
 
-当前代码将 UTC+8 的年/月/日提取后，传入 `new Date(year, month, date)` 构造函数。该构造函数使用**设备本地时区**的午夜，而非 UTC+8 午夜。这导致：
+### Bug 1: 移动端心形网格溢出 (严重)
 
-1. **天数计算**：非 UTC+8 时区的用户可能多算或少算 1 天
-2. **午夜刷新**：定时器倒计时到本地午夜而非 UTC+8 午夜，刷新时间可能偏差数小时
+9 列网格在移动端 (390px) 宽度下溢出屏幕：
+- 计算：9 x 40px + 8 x 6px (gap-1.5) = 408px
+- 可用宽度：390px - 24px (px-3 padding) = 366px
+- **结果：网格右侧被裁切，照片显示不完整**
+
+### Bug 2: compressImage 小图会被放大 (中等)
+
+```text
+const ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
+```
+当原图尺寸小于 1200px 时，ratio > 1，图片会被放大导致模糊且文件变大。应限制 ratio 不超过 1。
+
+### Bug 3: ObjectURL 内存泄漏 (轻微)
+
+`compressImage` 中 `URL.createObjectURL(file)` 创建的临时 URL 从未被 `URL.revokeObjectURL()` 释放，频繁上传会导致内存泄漏。
+
+### Bug 4: 部分失败时仍显示成功提示 (中等)
+
+即使某些照片验证失败或上传出错，第 120 行的 `toast.success("Photos uploaded successfully!")` 仍会执行，给用户错误的反馈。
+
+### Bug 5: iOS HEIC 格式处理不友好 (轻微)
+
+iOS 相机默认拍摄 HEIC 格式，`accept="image/*"` 允许选择 HEIC 文件，但 Magic Bytes 验证会拒绝它，用户只会看到一个通用错误提示。
+
+---
 
 ## 修复方案
 
-改用纯数学方式计算，完全避免本地时区干扰：
+### 文件：`src/components/PhotoWall.tsx`
 
-### `getDaysTogether` 修复
+| Bug | 修复内容 |
+|-----|---------|
+| Bug 1 | 将移动端单元格从 40px 缩小至 34px，使总宽度为 9x34 + 8x6 = 354px，适配 390px 屏幕 |
+| Bug 2 | 在 ratio 计算后加 `Math.min(ratio, 1)` 防止放大 |
+| Bug 3 | 在 `img.onload` 回调开头添加 `URL.revokeObjectURL(img.src)` |
+| Bug 4 | 添加成功/失败计数器，根据实际结果显示对应提示 |
+| Bug 5 | 在 MIME/扩展名检查中加入 HEIC/HEIF，并在 Magic Bytes 错误提示中提醒 iOS 用户切换为 JPG 格式 |
 
-```text
-// 将 UTC 时间戳加 8 小时得到 UTC+8 时间戳，再除以一天的毫秒数取整得到天数
-const utc8Ms = now.getTime() + 8 * 3600000;
-const todayDays = Math.floor(utc8Ms / 86400000);
-
-// 纪念日同样用 UTC+8 天数
-const annivUtc8Ms = Date.UTC(2022, 8, 17) + 8 * 3600000;
-const annivDays = Math.floor(annivUtc8Ms / 86400000);
-
-return todayDays - annivDays;
-```
-
-### `getMsUntilUtc8Midnight` 修复
-
-```text
-// 当前 UTC+8 时间戳
-const utc8Ms = now.getTime() + 8 * 3600000;
-// 今天已过的毫秒数
-const msSinceMidnight = utc8Ms % 86400000;
-// 距离下一个 UTC+8 午夜的毫秒数
-return 86400000 - msSinceMidnight + 1000;
-```
-
-## 改动文件
-
-| 文件 | 改动 |
-|------|------|
-| `src/components/HeroSection.tsx` | 重写 `getDaysTogether` 和 `getMsUntilUtc8Midnight`，用纯数学运算替代本地时区构造函数 |
-
-## 验证
-
-修复后无论用户在哪个时区，天数计算和刷新时间都会精确对齐到 UTC+8 午夜 0:00。
