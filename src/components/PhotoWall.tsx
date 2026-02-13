@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import PhotoLightbox from "./PhotoLightbox";
 
 const HEART_GRID = [
-  [0,0,1,1,0,1,1,0,0], // Row 1: two humps
+  [0,0,1,1,0,1,1,0,0],
   [0,1,1,1,1,1,1,1,0],
   [1,1,1,1,1,1,1,1,1],
   [0,1,1,1,1,1,1,1,0],
@@ -14,7 +14,6 @@ const HEART_GRID = [
   [0,0,0,0,1,0,0,0,0],
 ];
 
-// Count filled cells
 const FILLED_CELLS = HEART_GRID.flat().filter(Boolean).length;
 
 interface Photo {
@@ -30,7 +29,8 @@ const compressImage = (file: File, maxWidth: number = 1200): Promise<Blob> => {
     const ctx = canvas.getContext("2d");
     const img = new Image();
     img.onload = () => {
-      const ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
+      URL.revokeObjectURL(img.src); // Bug 3 fix: release ObjectURL
+      const ratio = Math.min(maxWidth / img.width, maxWidth / img.height, 1); // Bug 2 fix: cap at 1
       canvas.width = img.width * ratio;
       canvas.height = img.height * ratio;
       ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
@@ -80,8 +80,9 @@ const PhotoWall = () => {
   useEffect(() => { fetchPhotos(); }, [fetchPhotos]);
 
   const validateImageFile = async (file: File): Promise<boolean> => {
-    const allowedMimes = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp"];
-    const allowedExts = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"];
+    // Bug 5 fix: add HEIC/HEIF support in MIME and extension checks
+    const allowedMimes = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp", "image/heic", "image/heif"];
+    const allowedExts = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".heic", ".heif"];
     const ext = file.name.toLowerCase().slice(file.name.lastIndexOf("."));
     if (!allowedMimes.includes(file.type) && !allowedExts.includes(ext)) {
       toast.error(`${file.name}: Only image files (JPG, PNG, GIF, WebP) are allowed`);
@@ -94,8 +95,10 @@ const PhotoWall = () => {
     const isGIF = bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46;
     const isWEBP = bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 && bytes[8] === 0x57;
     const isBMP = bytes[0] === 0x42 && bytes[1] === 0x4D;
-    if (!isJPEG && !isPNG && !isGIF && !isWEBP && !isBMP) {
-      toast.error(`${file.name}: File does not appear to be a valid image`);
+    // HEIC/HEIF: ftyp box at offset 4
+    const isFTYP = bytes[4] === 0x66 && bytes[5] === 0x74 && bytes[6] === 0x79 && bytes[7] === 0x70;
+    if (!isJPEG && !isPNG && !isGIF && !isWEBP && !isBMP && !isFTYP) {
+      toast.error(`${file.name}: 文件格式不支持。iOS 用户请在「设置 > 相机 > 格式」中选择「兼容性最佳」以使用 JPG 格式拍照。`);
       return false;
     }
     return true;
@@ -108,17 +111,27 @@ const PhotoWall = () => {
     if (remaining <= 0) { toast.error(`照片墙已满，最多 ${MAX_PHOTOS} 张照片`); e.target.value = ""; return; }
     if (files.length > remaining) { toast.error(`最多还能上传 ${remaining} 张照片`); e.target.value = ""; return; }
     setUploading(true);
+    let successCount = 0; // Bug 4 fix: track results
+    let failCount = 0;
     try {
       for (const file of Array.from(files)) {
-        if (file.size > 10 * 1024 * 1024) { toast.error(`${file.name} exceeds 10MB limit`); continue; }
-        if (!(await validateImageFile(file))) continue;
+        if (file.size > 10 * 1024 * 1024) { toast.error(`${file.name} exceeds 10MB limit`); failCount++; continue; }
+        if (!(await validateImageFile(file))) { failCount++; continue; }
         const compressed = await compressImage(file);
         const fileName = `${crypto.randomUUID()}.jpg`;
         const { error } = await supabase.storage.from("photos").upload(fileName, compressed, { contentType: "image/jpeg" });
-        if (error) { toast.error(`Upload failed: ${file.name}`); console.error(error); }
+        if (error) { toast.error(`Upload failed: ${file.name}`); console.error(error); failCount++; }
+        else { successCount++; }
       }
-      toast.success("Photos uploaded successfully!");
-      fetchPhotos();
+      // Bug 4 fix: conditional toast
+      if (successCount > 0 && failCount === 0) {
+        toast.success(`成功上传 ${successCount} 张照片！`);
+      } else if (successCount > 0 && failCount > 0) {
+        toast.warning(`上传完成：${successCount} 张成功，${failCount} 张失败`);
+      } else if (successCount === 0 && failCount > 0) {
+        toast.error("所有照片上传失败");
+      }
+      if (successCount > 0) fetchPhotos();
     } catch (err) { toast.error("Upload error"); console.error(err); }
     finally { setUploading(false); e.target.value = ""; }
   };
@@ -157,14 +170,15 @@ const PhotoWall = () => {
         >
           {HEART_GRID.flat().map((filled, i) => {
             if (!filled) {
-              return <div key={i} className="w-[40px] h-[40px] sm:w-[55px] sm:h-[55px] md:w-[70px] md:h-[70px]" />;
+              {/* Bug 1 fix: 34px on mobile instead of 40px */}
+              return <div key={i} className="w-[34px] h-[34px] sm:w-[55px] sm:h-[55px] md:w-[70px] md:h-[70px]" />;
             }
             const photo = photoIndex < photos.length ? photos[photoIndex] : null;
             photoIndex++;
             return (
               <div
                 key={i}
-                className={`w-[40px] h-[40px] sm:w-[55px] sm:h-[55px] md:w-[70px] md:h-[70px] rounded-xl overflow-hidden bg-muted/40 transition-transform duration-300 ${photo ? "hover:scale-110 hover:z-10 cursor-pointer" : ""}`}
+                className={`w-[34px] h-[34px] sm:w-[55px] sm:h-[55px] md:w-[70px] md:h-[70px] rounded-xl overflow-hidden bg-muted/40 transition-transform duration-300 ${photo ? "hover:scale-110 hover:z-10 cursor-pointer" : ""}`}
                 onClick={() => photo && setSelectedPhoto(photo.name)}
               >
                 {photo && <img src={photo.url} alt="love" className="w-full h-full object-cover" loading="lazy" />}
