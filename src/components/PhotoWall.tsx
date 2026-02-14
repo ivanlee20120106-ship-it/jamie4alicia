@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Upload, Heart } from "lucide-react";
+import { Upload } from "lucide-react";
 import { toast } from "sonner";
 import PhotoLightbox from "./PhotoLightbox";
 
@@ -14,8 +14,6 @@ const HEART_GRID = [
   [0,0,0,0,1,0,0,0,0],
 ];
 
-const FILLED_CELLS = HEART_GRID.flat().filter(Boolean).length;
-
 interface Photo {
   name: string;
   url: string;
@@ -24,11 +22,6 @@ interface Photo {
 const MAX_PHOTOS = 36;
 const MAX_TOTAL_SIZE = 60 * 1024 * 1024; // 60MB
 const CONCURRENT_LIMIT = 6;
-
-interface CompressResult {
-  blob: Blob;
-  isOriginal: boolean;
-}
 
 const convertHeicIfNeeded = async (file: File): Promise<File> => {
   const buffer = await file.slice(0, 12).arrayBuffer();
@@ -46,7 +39,7 @@ const convertHeicIfNeeded = async (file: File): Promise<File> => {
   return new File([blob], file.name.replace(/\.heic|\.heif/i, '.jpg'), { type: 'image/jpeg' });
 };
 
-const compressImage = (file: File, maxWidth: number = 1200): Promise<CompressResult> => {
+const compressImage = (file: File, maxWidth: number = 1200): Promise<Blob> => {
   return new Promise((resolve) => {
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
@@ -59,7 +52,7 @@ const compressImage = (file: File, maxWidth: number = 1200): Promise<CompressRes
       canvas.height = img.height * ratio;
       ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
       canvas.toBlob(
-        (blob) => resolve({ blob: blob ?? file, isOriginal: !blob }),
+        (blob) => resolve(blob ?? file),
         "image/jpeg",
         0.9
       );
@@ -67,7 +60,7 @@ const compressImage = (file: File, maxWidth: number = 1200): Promise<CompressRes
     img.onerror = () => {
       URL.revokeObjectURL(objectUrl);
       console.warn(`Cannot render ${file.name} in browser, using original file`);
-      resolve({ blob: file, isOriginal: true });
+      resolve(file);
     };
     img.src = objectUrl;
   });
@@ -165,8 +158,8 @@ const PhotoWall = () => {
         if (!(await validateImageFile(file))) continue;
         try {
           const converted = await convertHeicIfNeeded(file);
-          const { blob } = await compressImage(converted);
-          validFiles.push({ file, compressed: blob });
+          const compressed = await compressImage(converted);
+          validFiles.push({ file, compressed });
         } catch (err) {
           console.error(`Failed to process ${file.name}:`, err);
           toast.error(`${file.name}: 格式转换失败，请尝试其他格式`);
@@ -215,7 +208,7 @@ const PhotoWall = () => {
     else { toast.success("Deleted"); fetchPhotos(); setSelectedIndex(null); }
   };
 
-  let photoIndex = 0;
+  const flatGrid = HEART_GRID.flat();
 
   return (
     <section className="relative z-10 py-12 sm:py-16 md:py-20 px-3 sm:px-4">
@@ -247,25 +240,19 @@ const PhotoWall = () => {
           className="grid gap-1.5 sm:gap-2 md:gap-2.5"
           style={{ gridTemplateColumns: "repeat(9, 1fr)" }}
         >
-          {HEART_GRID.flat().map((filled, i) => {
+          {flatGrid.map((filled, i) => {
             if (!filled) {
-              {/* Bug 1 fix: 34px on mobile instead of 40px */}
               return <div key={i} className="w-[34px] h-[34px] sm:w-[55px] sm:h-[55px] md:w-[70px] md:h-[70px]" />;
             }
-            const currentPhotoIndex = photoIndex;
-            const photo = currentPhotoIndex < photos.length ? photos[currentPhotoIndex] : null;
-            photoIndex++;
-            const label = String(currentPhotoIndex + 1).padStart(2, "0");
+            const photoIdx = flatGrid.slice(0, i).filter(Boolean).length;
+            const photo = photoIdx < photos.length ? photos[photoIdx] : null;
             return (
               <div
                 key={i}
                 className={`relative w-[34px] h-[34px] sm:w-[55px] sm:h-[55px] md:w-[70px] md:h-[70px] rounded-xl overflow-hidden bg-muted/40 transition-transform duration-300 ${photo ? "hover:scale-110 hover:z-10 cursor-pointer" : ""}`}
-                onClick={() => photo && setSelectedIndex(currentPhotoIndex)}
+                onClick={() => photo && setSelectedIndex(photoIdx)}
               >
                 {photo && <img src={photo.url} alt="love" className="w-full h-full object-cover" loading="lazy" />}
-                <span className="absolute top-0.5 left-0.5 text-[7px] sm:text-[9px] bg-black/50 text-white rounded px-0.5 leading-tight pointer-events-none">
-                  {label}
-                </span>
               </div>
             );
           })}
