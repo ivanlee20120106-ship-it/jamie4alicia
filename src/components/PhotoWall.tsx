@@ -25,7 +25,12 @@ const MAX_PHOTOS = 36;
 const MAX_TOTAL_SIZE = 60 * 1024 * 1024; // 60MB
 const CONCURRENT_LIMIT = 6;
 
-const compressImage = (file: File, maxWidth: number = 1200): Promise<Blob> => {
+interface CompressResult {
+  blob: Blob;
+  isOriginal: boolean;
+}
+
+const compressImage = (file: File, maxWidth: number = 1200): Promise<CompressResult> => {
   return new Promise((resolve) => {
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
@@ -38,7 +43,7 @@ const compressImage = (file: File, maxWidth: number = 1200): Promise<Blob> => {
       canvas.height = img.height * ratio;
       ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
       canvas.toBlob(
-        (blob) => resolve(blob ?? file),
+        (blob) => resolve({ blob: blob ?? file, isOriginal: !blob }),
         "image/jpeg",
         0.9
       );
@@ -46,7 +51,7 @@ const compressImage = (file: File, maxWidth: number = 1200): Promise<Blob> => {
     img.onerror = () => {
       URL.revokeObjectURL(objectUrl);
       console.warn(`Cannot render ${file.name} in browser, using original file`);
-      resolve(file);
+      resolve({ blob: file, isOriginal: true });
     };
     img.src = objectUrl;
   });
@@ -142,8 +147,12 @@ const PhotoWall = () => {
       for (const file of fileArray) {
         if (file.size > 6 * 1024 * 1024) { toast.error(`${file.name} 超过 6MB 大小限制`); continue; }
         if (!(await validateImageFile(file))) continue;
-        const compressed = await compressImage(file);
-        validFiles.push({ file, compressed });
+        const { blob, isOriginal } = await compressImage(file);
+        if (isOriginal && !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+          toast.error(`${file.name}: 此浏览器无法处理该格式，请在手机设置中将相机格式改为「兼容性最佳」后重新拍照`);
+          continue;
+        }
+        validFiles.push({ file, compressed: blob });
       }
 
       if (validFiles.length === 0) { setUploading(false); e.target.value = ""; return; }
