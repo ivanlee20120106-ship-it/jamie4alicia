@@ -1,5 +1,4 @@
-import { useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Photo {
@@ -19,9 +18,10 @@ interface PhotoLightboxProps {
 
 const PhotoLightbox = ({ photos, currentIndex, onClose, onDelete, onPrev, onNext, canDelete = true }: PhotoLightboxProps) => {
   const photo = photos[currentIndex];
-  const url = supabase.storage.from("photos").getPublicUrl(photo.name).data.publicUrl;
+  const url = photo.url;
   const isFirst = currentIndex === 0;
   const isLast = currentIndex === photos.length - 1;
+  const touchStartX = useRef(0);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -32,6 +32,18 @@ const PhotoLightbox = ({ photos, currentIndex, onClose, onDelete, onPrev, onNext
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, [isFirst, isLast, onPrev, onNext, onClose]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0 && !isLast) onNext();
+      if (diff < 0 && !isFirst) onPrev();
+    }
+  };
 
   return (
     <div
@@ -49,8 +61,17 @@ const PhotoLightbox = ({ photos, currentIndex, onClose, onDelete, onPrev, onNext
         )}
         {isFirst && <div className="w-[32px] sm:w-[40px] shrink-0" />}
 
-        <div className="flex flex-col items-center">
-          <img src={url} alt="photo" className="max-w-full max-h-[75vh] rounded-lg object-contain" />
+        <div
+          className="flex flex-col items-center"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          <img
+            src={url}
+            alt="photo"
+            className="max-w-full max-h-[75vh] rounded-lg object-contain select-none"
+            draggable={false}
+          />
           <span className="text-muted-foreground text-xs mt-2">
             {String(currentIndex + 1).padStart(2, "0")} / {String(photos.length).padStart(2, "0")}
           </span>
