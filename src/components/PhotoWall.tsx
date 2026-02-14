@@ -17,6 +17,7 @@ const HEART_GRID = [
 interface Photo {
   name: string;
   url: string;
+  thumbnailUrl: string;
 }
 
 const MAX_PHOTOS = 36;
@@ -101,10 +102,14 @@ const PhotoWall = () => {
         .filter((f) => f.name !== ".emptyFolderPlaceholder")
         .slice(0, MAX_PHOTOS)
         .reverse()
-        .map((f) => ({
-          name: f.name,
-          url: supabase.storage.from("photos").getPublicUrl(f.name).data.publicUrl,
-        }));
+        .map((f) => {
+          const publicUrl = supabase.storage.from("photos").getPublicUrl(f.name).data.publicUrl;
+          return {
+            name: f.name,
+            url: publicUrl,
+            thumbnailUrl: `${publicUrl}?width=150&resize=cover&quality=75`,
+          };
+        });
       setPhotos(photoList);
     }
   }, []);
@@ -252,7 +257,7 @@ const PhotoWall = () => {
                 className={`relative w-[34px] h-[34px] sm:w-[55px] sm:h-[55px] md:w-[70px] md:h-[70px] rounded-xl overflow-hidden bg-muted/40 transition-transform duration-300 ${photo ? "hover:scale-110 hover:z-10 cursor-pointer" : ""}`}
                 onClick={() => photo && setSelectedIndex(photoIdx)}
               >
-                {photo && <img src={photo.url} alt="love" className="w-full h-full object-cover" loading="lazy" />}
+                {photo && <img src={photo.thumbnailUrl} alt="love" className="w-full h-full object-cover" loading="lazy" />}
               </div>
             );
           })}
