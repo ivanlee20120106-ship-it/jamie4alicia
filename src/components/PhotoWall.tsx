@@ -22,7 +22,7 @@ interface Photo {
 }
 
 const MAX_PHOTOS = 36;
-const MAX_TOTAL_SIZE = 52 * 1024 * 1024; // 52MB
+const MAX_TOTAL_SIZE = 60 * 1024 * 1024; // 60MB
 const CONCURRENT_LIMIT = 6;
 
 const compressImage = (file: File, maxWidth: number = 1200): Promise<Blob> => {
@@ -126,14 +126,14 @@ const PhotoWall = () => {
 
     const fileArray = Array.from(files);
     const totalSize = fileArray.reduce((sum, f) => sum + f.size, 0);
-    if (totalSize > MAX_TOTAL_SIZE) { toast.error("本次上传总大小超过 52MB 限制"); e.target.value = ""; return; }
+    if (totalSize > MAX_TOTAL_SIZE) { toast.error("本次上传总大小超过 60MB 限制"); e.target.value = ""; return; }
 
     setUploading(true);
     try {
       // Validate and compress
       const validFiles: { file: File; compressed: Blob }[] = [];
       for (const file of fileArray) {
-        if (file.size > 5 * 1024 * 1024) { toast.error(`${file.name} 超过 5MB 大小限制`); continue; }
+        if (file.size > 6 * 1024 * 1024) { toast.error(`${file.name} 超过 6MB 大小限制`); continue; }
         if (!(await validateImageFile(file))) continue;
         const compressed = await compressImage(file);
         validFiles.push({ file, compressed });
