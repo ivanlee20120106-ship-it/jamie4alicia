@@ -22,6 +22,8 @@ interface Photo {
 }
 
 const MAX_PHOTOS = 36;
+const MAX_TOTAL_SIZE = 52 * 1024 * 1024; // 52MB
+const CONCURRENT_LIMIT = 6;
 
 const compressImage = (file: File, maxWidth: number = 1200): Promise<Blob> => {
   return new Promise((resolve, reject) => {
@@ -29,8 +31,8 @@ const compressImage = (file: File, maxWidth: number = 1200): Promise<Blob> => {
     const ctx = canvas.getContext("2d");
     const img = new Image();
     img.onload = () => {
-      URL.revokeObjectURL(img.src); // Bug 3 fix: release ObjectURL
-      const ratio = Math.min(maxWidth / img.width, maxWidth / img.height, 1); // Bug 2 fix: cap at 1
+      URL.revokeObjectURL(img.src);
+      const ratio = Math.min(maxWidth / img.width, maxWidth / img.height, 1);
       canvas.width = img.width * ratio;
       canvas.height = img.height * ratio;
       ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
@@ -45,9 +47,20 @@ const compressImage = (file: File, maxWidth: number = 1200): Promise<Blob> => {
   });
 };
 
+const uploadWithRetry = async (fileName: string, blob: Blob, retries = 1): Promise<boolean> => {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const { error } = await supabase.storage.from("photos").upload(fileName, blob, { contentType: "image/jpeg" });
+    if (!error) return true;
+    if (attempt < retries) await new Promise(r => setTimeout(r, 1000));
+    else console.error(error);
+  }
+  return false;
+};
+
 const PhotoWall = () => {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
 
@@ -110,30 +123,51 @@ const PhotoWall = () => {
     const remaining = MAX_PHOTOS - photos.length;
     if (remaining <= 0) { toast.error(`照片墙已满，最多 ${MAX_PHOTOS} 张照片`); e.target.value = ""; return; }
     if (files.length > remaining) { toast.error(`最多还能上传 ${remaining} 张照片`); e.target.value = ""; return; }
+
+    const fileArray = Array.from(files);
+    const totalSize = fileArray.reduce((sum, f) => sum + f.size, 0);
+    if (totalSize > MAX_TOTAL_SIZE) { toast.error("本次上传总大小超过 52MB 限制"); e.target.value = ""; return; }
+
     setUploading(true);
-    let successCount = 0; // Bug 4 fix: track results
-    let failCount = 0;
     try {
-      for (const file of Array.from(files)) {
-        if (file.size > 5 * 1024 * 1024) { toast.error(`${file.name} 超过 5MB 大小限制`); failCount++; continue; }
-        if (!(await validateImageFile(file))) { failCount++; continue; }
+      // Validate and compress
+      const validFiles: { file: File; compressed: Blob }[] = [];
+      for (const file of fileArray) {
+        if (file.size > 5 * 1024 * 1024) { toast.error(`${file.name} 超过 5MB 大小限制`); continue; }
+        if (!(await validateImageFile(file))) continue;
         const compressed = await compressImage(file);
-        const fileName = `${crypto.randomUUID()}.jpg`;
-        const { error } = await supabase.storage.from("photos").upload(fileName, compressed, { contentType: "image/jpeg" });
-        if (error) { toast.error(`Upload failed: ${file.name}`); console.error(error); failCount++; }
-        else { successCount++; }
+        validFiles.push({ file, compressed });
       }
-      // Bug 4 fix: conditional toast
-      if (successCount > 0 && failCount === 0) {
-        toast.success(`成功上传 ${successCount} 张照片！`);
-      } else if (successCount > 0 && failCount > 0) {
-        toast.warning(`上传完成：${successCount} 张成功，${failCount} 张失败`);
-      } else if (successCount === 0 && failCount > 0) {
-        toast.error("所有照片上传失败");
+
+      if (validFiles.length === 0) { setUploading(false); e.target.value = ""; return; }
+
+      // Batch concurrent upload
+      let successCount = 0;
+      let failCount = 0;
+      const total = validFiles.length;
+      setUploadProgress({ current: 0, total });
+
+      for (let i = 0; i < total; i += CONCURRENT_LIMIT) {
+        const batch = validFiles.slice(i, i + CONCURRENT_LIMIT);
+        const results = await Promise.all(
+          batch.map(async ({ file, compressed }) => {
+            const fileName = `${crypto.randomUUID()}.jpg`;
+            const ok = await uploadWithRetry(fileName, compressed);
+            if (!ok) toast.error(`上传失败: ${file.name}`);
+            return ok;
+          })
+        );
+        results.forEach(ok => ok ? successCount++ : failCount++);
+        setUploadProgress({ current: Math.min(i + batch.length, total), total });
       }
+
+      if (successCount > 0 && failCount === 0) toast.success(`成功上传 ${successCount} 张照片！`);
+      else if (successCount > 0) toast.warning(`上传完成：${successCount} 张成功，${failCount} 张失败`);
+      else toast.error("所有照片上传失败");
+
       if (successCount > 0) fetchPhotos();
-    } catch (err) { toast.error("Upload error"); console.error(err); }
-    finally { setUploading(false); e.target.value = ""; }
+    } catch (err) { toast.error("上传出错"); console.error(err); }
+    finally { setUploading(false); setUploadProgress(null); e.target.value = ""; }
   };
 
   const handleDelete = async (name: string) => {
@@ -157,7 +191,13 @@ const PhotoWall = () => {
         <div className="flex justify-center mb-8 sm:mb-12">
           <label className="cursor-pointer flex items-center gap-2 px-6 py-3 rounded-full bg-card/60 backdrop-blur-sm border border-border/50 hover:bg-card/80 transition-all duration-300">
             <Upload size={18} className="text-gold" />
-            <span className="text-foreground text-sm">{uploading ? "Uploading..." : "Upload Photos"}</span>
+            <span className="text-foreground text-sm">
+              {uploading
+                ? uploadProgress
+                  ? `正在上传 ${uploadProgress.current}/${uploadProgress.total}...`
+                  : "准备中..."
+                : "Upload Photos"}
+            </span>
             <input type="file" accept="image/*" multiple onChange={handleUpload} disabled={uploading} className="hidden" />
           </label>
         </div>
