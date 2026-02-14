@@ -22,7 +22,7 @@ interface Photo {
 }
 
 const MAX_PHOTOS = 36;
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE = 6 * 1024 * 1024; // 6MB
 const MAX_CONCURRENCY = 6;
 const MAX_RETRIES = 2;
 const RETRY_DELAY = 1000;
@@ -80,7 +80,7 @@ const uploadSinglePhoto = async (
   onProgress: () => void
 ): Promise<boolean> => {
   if (file.size > MAX_FILE_SIZE) {
-    toast.error(`${file.name} 超过 5MB 大小限制`);
+    toast.error(`${file.name} 超过 6MB 大小限制`);
     onProgress();
     return false;
   }
