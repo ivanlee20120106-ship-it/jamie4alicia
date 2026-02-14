@@ -30,6 +30,22 @@ interface CompressResult {
   isOriginal: boolean;
 }
 
+const convertHeicIfNeeded = async (file: File): Promise<File> => {
+  const buffer = await file.slice(0, 12).arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  const isFTYP = bytes[4] === 0x66 && bytes[5] === 0x74 && bytes[6] === 0x79 && bytes[7] === 0x70;
+  const ext = file.name.toLowerCase();
+  const isHeic = isFTYP || ext.endsWith('.heic') || ext.endsWith('.heif');
+
+  if (!isHeic) return file;
+
+  toast.info(`正在转换 ${file.name} 格式...`);
+  const heic2any = (await import('heic2any')).default;
+  const jpegBlob = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.92 });
+  const blob = Array.isArray(jpegBlob) ? jpegBlob[0] : jpegBlob;
+  return new File([blob], file.name.replace(/\.heic|\.heif/i, '.jpg'), { type: 'image/jpeg' });
+};
+
 const compressImage = (file: File, maxWidth: number = 1200): Promise<CompressResult> => {
   return new Promise((resolve) => {
     const canvas = document.createElement("canvas");
@@ -147,12 +163,15 @@ const PhotoWall = () => {
       for (const file of fileArray) {
         if (file.size > 6 * 1024 * 1024) { toast.error(`${file.name} 超过 6MB 大小限制`); continue; }
         if (!(await validateImageFile(file))) continue;
-        const { blob, isOriginal } = await compressImage(file);
-        if (isOriginal && !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-          toast.error(`${file.name}: 此浏览器无法处理该格式，请在手机设置中将相机格式改为「兼容性最佳」后重新拍照`);
+        try {
+          const converted = await convertHeicIfNeeded(file);
+          const { blob } = await compressImage(converted);
+          validFiles.push({ file, compressed: blob });
+        } catch (err) {
+          console.error(`Failed to process ${file.name}:`, err);
+          toast.error(`${file.name}: 格式转换失败，请尝试其他格式`);
           continue;
         }
-        validFiles.push({ file, compressed: blob });
       }
 
       if (validFiles.length === 0) { setUploading(false); e.target.value = ""; return; }
