@@ -8,7 +8,7 @@ const getDaysTogether = (): number => {
   const todayDays = Math.floor(utc8Ms / 86400000);
   const annivUtc8Ms = Date.UTC(2022, 8, 18) + 8 * 3600000;
   const annivDays = Math.floor(annivUtc8Ms / 86400000);
-  return todayDays - annivDays;
+  return todayDays - annivDays + 1;
 };
 
 const HeroSection = () => {
