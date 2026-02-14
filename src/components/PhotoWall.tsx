@@ -26,24 +26,29 @@ const MAX_TOTAL_SIZE = 60 * 1024 * 1024; // 60MB
 const CONCURRENT_LIMIT = 6;
 
 const compressImage = (file: File, maxWidth: number = 1200): Promise<Blob> => {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
     const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
     img.onload = () => {
-      URL.revokeObjectURL(img.src);
+      URL.revokeObjectURL(objectUrl);
       const ratio = Math.min(maxWidth / img.width, maxWidth / img.height, 1);
       canvas.width = img.width * ratio;
       canvas.height = img.height * ratio;
       ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
       canvas.toBlob(
-        (blob) => (blob ? resolve(blob) : reject(new Error("Compression failed"))),
+        (blob) => resolve(blob ?? file),
         "image/jpeg",
         0.9
       );
     };
-    img.onerror = reject;
-    img.src = URL.createObjectURL(file);
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      console.warn(`Cannot render ${file.name} in browser, using original file`);
+      resolve(file);
+    };
+    img.src = objectUrl;
   });
 };
 
@@ -130,6 +135,8 @@ const PhotoWall = () => {
 
     setUploading(true);
     try {
+      // Refresh token before starting long upload to prevent expiration
+      await supabase.auth.getSession();
       // Validate and compress
       const validFiles: { file: File; compressed: Blob }[] = [];
       for (const file of fileArray) {
