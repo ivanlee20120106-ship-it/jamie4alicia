@@ -248,19 +248,19 @@ const PhotoWall = () => {
 
       <div className="flex justify-center">
         <div
-          className="grid gap-1.5 sm:gap-2 md:gap-2.5"
-          style={{ gridTemplateColumns: "repeat(9, 1fr)" }}
+          className="photo-grid grid gap-1.5 sm:gap-2 md:gap-2.5"
+          style={{ gridTemplateColumns: "repeat(9, var(--cell-size, 34px))" }}
         >
           {flatGrid.map((filled, i) => {
             if (!filled) {
-              return <div key={i} className="w-[34px] h-[34px] sm:w-[55px] sm:h-[55px] md:w-[70px] md:h-[70px]" />;
+              return <div key={i} className="aspect-square" />;
             }
             const photoIdx = flatGrid.slice(0, i).filter(Boolean).length;
             const photo = photoIdx < photos.length ? photos[photoIdx] : null;
             return (
               <div
                 key={i}
-                className={`relative w-[34px] h-[34px] sm:w-[55px] sm:h-[55px] md:w-[70px] md:h-[70px] rounded-xl overflow-hidden bg-muted/40 transition-transform duration-300 ${photo ? "hover:scale-110 hover:z-10 cursor-pointer" : ""}`}
+                className={`relative aspect-square rounded-xl overflow-hidden ${photo ? "hover:scale-110 hover:z-10 cursor-pointer" : "bg-muted/20"} transition-transform duration-300`}
                 onClick={() => photo && setSelectedIndex(photoIdx)}
               >
                 {photo && <img src={photo.thumbnailUrl} alt="love" className="w-full h-full object-cover" loading="lazy" decoding="async" />}
