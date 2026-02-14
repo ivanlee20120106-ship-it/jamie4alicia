@@ -21,7 +21,7 @@ interface Photo {
   url: string;
 }
 
-const MAX_PHOTOS = 34;
+const MAX_PHOTOS = 36;
 
 const compressImage = (file: File, maxWidth: number = 1200): Promise<Blob> => {
   return new Promise((resolve, reject) => {
@@ -115,7 +115,7 @@ const PhotoWall = () => {
     let failCount = 0;
     try {
       for (const file of Array.from(files)) {
-        if (file.size > 10 * 1024 * 1024) { toast.error(`${file.name} exceeds 10MB limit`); failCount++; continue; }
+        if (file.size > 5 * 1024 * 1024) { toast.error(`${file.name} 超过 5MB 大小限制`); failCount++; continue; }
         if (!(await validateImageFile(file))) { failCount++; continue; }
         const compressed = await compressImage(file);
         const fileName = `${crypto.randomUUID()}.jpg`;
