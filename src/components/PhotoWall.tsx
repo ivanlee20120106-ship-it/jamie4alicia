@@ -87,7 +87,7 @@ const PhotoWall = () => {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
-  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
@@ -212,7 +212,7 @@ const PhotoWall = () => {
   const handleDelete = async (name: string) => {
     const { error } = await supabase.storage.from("photos").remove([name]);
     if (error) { toast.error("Delete failed"); }
-    else { toast.success("Deleted"); fetchPhotos(); setSelectedPhoto(null); }
+    else { toast.success("Deleted"); fetchPhotos(); setSelectedIndex(null); }
   };
 
   let photoIndex = 0;
@@ -252,26 +252,34 @@ const PhotoWall = () => {
               {/* Bug 1 fix: 34px on mobile instead of 40px */}
               return <div key={i} className="w-[34px] h-[34px] sm:w-[55px] sm:h-[55px] md:w-[70px] md:h-[70px]" />;
             }
-            const photo = photoIndex < photos.length ? photos[photoIndex] : null;
+            const currentPhotoIndex = photoIndex;
+            const photo = currentPhotoIndex < photos.length ? photos[currentPhotoIndex] : null;
             photoIndex++;
+            const label = String(currentPhotoIndex + 1).padStart(2, "0");
             return (
               <div
                 key={i}
-                className={`w-[34px] h-[34px] sm:w-[55px] sm:h-[55px] md:w-[70px] md:h-[70px] rounded-xl overflow-hidden bg-muted/40 transition-transform duration-300 ${photo ? "hover:scale-110 hover:z-10 cursor-pointer" : ""}`}
-                onClick={() => photo && setSelectedPhoto(photo.name)}
+                className={`relative w-[34px] h-[34px] sm:w-[55px] sm:h-[55px] md:w-[70px] md:h-[70px] rounded-xl overflow-hidden bg-muted/40 transition-transform duration-300 ${photo ? "hover:scale-110 hover:z-10 cursor-pointer" : ""}`}
+                onClick={() => photo && setSelectedIndex(currentPhotoIndex)}
               >
                 {photo && <img src={photo.url} alt="love" className="w-full h-full object-cover" loading="lazy" />}
+                <span className="absolute top-0.5 left-0.5 text-[7px] sm:text-[9px] bg-black/50 text-white rounded px-0.5 leading-tight pointer-events-none">
+                  {label}
+                </span>
               </div>
             );
           })}
         </div>
       </div>
 
-      {selectedPhoto && (
+      {selectedIndex !== null && selectedIndex < photos.length && (
         <PhotoLightbox
-          photoName={selectedPhoto}
-          onClose={() => setSelectedPhoto(null)}
+          photos={photos}
+          currentIndex={selectedIndex}
+          onClose={() => setSelectedIndex(null)}
           onDelete={handleDelete}
+          onPrev={() => setSelectedIndex((i) => Math.max(0, (i ?? 1) - 1))}
+          onNext={() => setSelectedIndex((i) => Math.min(photos.length - 1, (i ?? 0) + 1))}
           canDelete={!!user}
         />
       )}
