@@ -6,7 +6,7 @@ const getDaysTogether = (): number => {
   const now = new Date();
   const utc8Ms = now.getTime() + 8 * 3600000;
   const todayDays = Math.floor(utc8Ms / 86400000);
-  const annivUtc8Ms = Date.UTC(2022, 8, 17) + 8 * 3600000;
+  const annivUtc8Ms = Date.UTC(2022, 8, 18) + 8 * 3600000;
   const annivDays = Math.floor(annivUtc8Ms / 86400000);
   return todayDays - annivDays;
 };
@@ -55,7 +55,7 @@ const HeroSection = () => {
 
       {/* Anniversary */}
       <div className="mt-8 sm:mt-10 animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
-        <DateBadge date="2022.09.17" label="Anniversary" large />
+        <DateBadge date="2022.09.18" label="Anniversary" large />
       </div>
 
       {/* Day counter */}

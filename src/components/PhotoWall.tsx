@@ -72,6 +72,12 @@ const uploadWithRetry = async (fileName: string, blob: Blob, retries = 1): Promi
     const { error } = await supabase.storage.from("photos").upload(fileName, blob, { contentType: "image/jpeg" });
     if (!error) return true;
     console.error(`Upload attempt ${attempt + 1} failed for ${fileName}:`, error.message, error);
+    // Don't retry on permission errors
+    const msg = error.message?.toLowerCase() ?? "";
+    if (msg.includes("403") || msg.includes("401") || msg.includes("not authorized") || msg.includes("permission")) {
+      toast.error("登录已过期，请重新登录后再上传");
+      return false;
+    }
     if (attempt < retries) await new Promise(r => setTimeout(r, 1500));
   }
   return false;
@@ -96,7 +102,7 @@ const PhotoWall = () => {
     const { data, error } = await supabase.storage.from("photos").list("", {
       sortBy: { column: "created_at", order: "desc" },
     });
-    if (error) { console.error(error); return; }
+    if (error) { console.error(error); setPhotos([]); return; }
     if (data) {
       const photoList = data
         .filter((f) => f.name !== ".emptyFolderPlaceholder")
@@ -210,7 +216,7 @@ const PhotoWall = () => {
   const handleDelete = async (name: string) => {
     const { error } = await supabase.storage.from("photos").remove([name]);
     if (error) { toast.error("Delete failed"); }
-    else { toast.success("Deleted"); fetchPhotos(); setSelectedIndex(null); }
+    else { toast.success("Deleted"); setSelectedIndex(null); fetchPhotos(); }
   };
 
   const flatGrid = HEART_GRID.flat();
@@ -257,7 +263,7 @@ const PhotoWall = () => {
                 className={`relative w-[34px] h-[34px] sm:w-[55px] sm:h-[55px] md:w-[70px] md:h-[70px] rounded-xl overflow-hidden bg-muted/40 transition-transform duration-300 ${photo ? "hover:scale-110 hover:z-10 cursor-pointer" : ""}`}
                 onClick={() => photo && setSelectedIndex(photoIdx)}
               >
-                {photo && <img src={photo.thumbnailUrl} alt="love" className="w-full h-full object-cover" loading="lazy" />}
+                {photo && <img src={photo.thumbnailUrl} alt="love" className="w-full h-full object-cover" loading="lazy" decoding="async" />}
               </div>
             );
           })}
