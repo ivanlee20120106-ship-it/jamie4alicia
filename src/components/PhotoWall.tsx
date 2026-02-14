@@ -51,8 +51,8 @@ const uploadWithRetry = async (fileName: string, blob: Blob, retries = 1): Promi
   for (let attempt = 0; attempt <= retries; attempt++) {
     const { error } = await supabase.storage.from("photos").upload(fileName, blob, { contentType: "image/jpeg" });
     if (!error) return true;
-    if (attempt < retries) await new Promise(r => setTimeout(r, 1000));
-    else console.error(error);
+    console.error(`Upload attempt ${attempt + 1} failed for ${fileName}:`, error.message, error);
+    if (attempt < retries) await new Promise(r => setTimeout(r, 1500));
   }
   return false;
 };
@@ -159,6 +159,10 @@ const PhotoWall = () => {
         );
         results.forEach(ok => ok ? successCount++ : failCount++);
         setUploadProgress({ current: Math.min(i + batch.length, total), total });
+        // Add delay between batches to avoid rate limiting
+        if (i + batch.length < total) {
+          await new Promise(r => setTimeout(r, 500));
+        }
       }
 
       if (successCount > 0 && failCount === 0) toast.success(`成功上传 ${successCount} 张照片！`);
