@@ -1,31 +1,61 @@
 
 
-# 更新上传限制并验证功能
+# 修复上传 17 张照片后报错的问题
 
-## 修改内容
+## 问题分析
+
+经排查，发现以下可能导致上传失败的原因：
+
+1. **并发压力过大**：6 路并发上传 + 同时进行图片压缩，在处理大量照片时可能导致浏览器内存压力或请求超时
+2. **缺少批次间延迟**：连续发送 3 批（每批 6 张）请求之间没有间隔，可能触发后端速率限制
+3. **错误信息不够具体**：`uploadWithRetry` 中 Supabase 返回的具体错误被吞掉，只显示通用的"上传出错"
+
+## 修改方案
 
 ### 文件：`src/components/PhotoWall.tsx`
 
-需要修改 3 处：
+#### 1. 在批次之间添加延迟
 
-| 位置 | 当前值 | 修改后 |
-|------|--------|--------|
-| 第 25 行 常量 | `52 * 1024 * 1024` (52MB) | `60 * 1024 * 1024` (60MB) |
-| 第 129 行 错误提示 | `"本次上传总大小超过 52MB 限制"` | `"本次上传总大小超过 60MB 限制"` |
-| 第 136 行 单文件限制 | `5 * 1024 * 1024` + `"超过 5MB 大小限制"` | `6 * 1024 * 1024` + `"超过 6MB 大小限制"` |
+在每个并发批次完成后，添加 500ms 延迟，避免触发后端速率限制：
 
-## 验证方案
+```text
+for (let i = 0; i < total; i += CONCURRENT_LIMIT) {
+  const batch = ...;
+  const results = await Promise.all(...);
+  // 批次间添加延迟
+  if (i + batch.length < total) {
+    await new Promise(r => setTimeout(r, 500));
+  }
+}
+```
 
-修改完成后，我会在测试环境中进行以下验证（不会上传到线上）：
+#### 2. 增强错误日志
 
-1. 检查代码中三处常量和提示文案是否正确更新
-2. 确认上传按钮仅在登录后显示
-3. 确认并发上传、进度显示、重试逻辑的代码逻辑完整性
-4. 确认照片墙 36 格心形网格与 `MAX_PHOTOS = 36` 一致
+在 `uploadWithRetry` 中记录每次失败的具体错误信息（包括 status code 和 message），以便定位问题：
+
+```text
+const uploadWithRetry = async (fileName, blob, retries = 1) => {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const { error } = await supabase.storage.from("photos").upload(...);
+    if (!error) return true;
+    console.error(`Upload attempt ${attempt + 1} failed for ${fileName}:`, error.message, error);
+    if (attempt < retries) await new Promise(r => setTimeout(r, 1500));
+  }
+  return false;
+};
+```
+
+#### 3. 增加重试等待时间
+
+将重试间隔从 1 秒增加到 1.5 秒，给后端更多恢复时间。
 
 ### 技术细节
 
-- 第 25 行：`const MAX_TOTAL_SIZE = 52 * 1024 * 1024;` 改为 `60 * 1024 * 1024`，注释改为 `// 60MB`
-- 第 129 行：toast 提示中 "52MB" 改为 "60MB"
-- 第 136 行：`file.size > 5 * 1024 * 1024` 改为 `6 * 1024 * 1024`，提示改为 `"超过 6MB 大小限制"`
+| 项目 | 当前值 | 修改后 |
+|------|--------|--------|
+| 批次间延迟 | 无 | 500ms |
+| 重试间隔 | 1000ms | 1500ms |
+| 错误日志 | 仅最后一次 console.error | 每次失败都记录详细信息 |
+
+修改完成后，下次上传如果仍有失败，控制台会显示具体的错误原因（如 rate limit / timeout / payload error），帮助进一步定位。
 
