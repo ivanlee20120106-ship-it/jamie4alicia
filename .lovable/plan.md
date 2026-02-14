@@ -1,55 +1,55 @@
 
 
-# 修复上传失败的剩余问题
+# 修复照片墙 HEIC 文件显示失败问题
 
-## 问题总结
+## 问题根因
 
-经过后端排查，确认以下 3 个问题需要修复：
+`compressImage` 在浏览器无法渲染 HEIC 文件时，通过 `img.onerror` 降级返回原始文件。但后续上传仍使用 `contentType: "image/jpeg"`，导致实际为 HEIC 内容的文件被标记为 JPEG。浏览器尝试以 JPEG 渲染 HEIC 二进制数据，图片破损。
 
-### 问题 1：存储桶 MIME 类型白名单不完整
-
-`photos` 存储桶的 `allowed_mime_types` 只包含 `[image/jpeg, image/png, image/gif, image/webp, image/bmp]`，缺少 `image/heic` 和 `image/heif`。虽然前端会压缩为 JPEG 再上传（contentType 设为 `image/jpeg`），但如果压缩失败或浏览器不支持 HEIC 渲染，原始文件上传会被后端拒绝。
-
-### 问题 2：HEIC 文件无法在浏览器中压缩
-
-`compressImage` 使用 `<img>` + `<canvas>` 进行压缩，但大多数浏览器（除 Safari）不支持渲染 HEIC/HEIF 格式。这会导致 `img.onerror` 触发，压缩失败后整个上传流程中断，用户只看到通用错误提示。
-
-### 问题 3：长时间上传可能导致 token 过期
-
-上传 36 张照片时，压缩 + 上传 + 批次延迟可能耗时数分钟。如果 JWT token 在此期间过期且未刷新，后续批次会因认证失败而报错。
-
----
+同时，已损坏的 3 个文件需要被识别并清理。
 
 ## 修复方案
 
-### 修复 1：更新存储桶 MIME 类型（SQL 迁移）
+### 1. 修改 `compressImage` 返回压缩状态（`src/components/PhotoWall.tsx`）
 
-通过 SQL 迁移为 `photos` 存储桶添加 `image/heic` 和 `image/heif` 支持：
-
-```text
-UPDATE storage.buckets 
-SET allowed_mime_types = ARRAY['image/jpeg','image/png','image/gif','image/webp','image/bmp','image/heic','image/heif']
-WHERE name = 'photos';
-```
-
-### 修复 2：HEIC 压缩失败时的优雅降级（`src/components/PhotoWall.tsx`）
-
-修改 `compressImage` 函数，在 `img.onerror` 时不直接 reject，而是返回原始文件作为 fallback。同时为 HEIC 文件添加特殊提示，建议用户使用 JPG 格式。
-
-具体改动：
-- 将 `compressImage` 改为在渲染失败时返回原始 Blob（而非抛错）
-- 在 `handleUpload` 中捕获压缩失败并显示友好提示
-
-### 修复 3：上传前刷新 token（`src/components/PhotoWall.tsx`）
-
-在 `handleUpload` 开始时调用 `supabase.auth.getSession()` 强制刷新 token，确保长时间上传期间认证不会过期。
-
-在 `handleUpload` 函数的 `setUploading(true)` 之后添加：
+让 `compressImage` 返回一个对象，包含 Blob 和是否为原始文件的标志：
 
 ```text
-// Refresh token before starting long upload
-await supabase.auth.getSession();
+interface CompressResult {
+  blob: Blob;
+  isOriginal: boolean;
+}
+
+const compressImage = (file: File, maxWidth = 1200): Promise<CompressResult> => {
+  return new Promise((resolve) => {
+    // ... canvas 逻辑不变
+    img.onload = () => {
+      // 压缩成功
+      resolve({ blob: compressedBlob, isOriginal: false });
+    };
+    img.onerror = () => {
+      // 浏览器无法渲染（HEIC等），返回原始文件并标记
+      resolve({ blob: file, isOriginal: true });
+    };
+  });
+};
 ```
+
+### 2. 在上传逻辑中拒绝无法压缩的非 JPEG 文件
+
+在 `handleUpload` 的验证和压缩阶段，如果 `compressImage` 返回 `isOriginal: true` 且原始文件不是 JPEG/PNG/WebP（即浏览器可直接渲染的格式），则跳过该文件并提示用户：
+
+```text
+const { blob, isOriginal } = await compressImage(file);
+if (isOriginal && !['image/jpeg','image/png','image/webp'].includes(file.type)) {
+  toast.error(`${file.name}: 此浏览器无法处理该格式，请在手机设置中将相机格式改为「兼容性最佳」后重新拍照`);
+  continue;
+}
+```
+
+### 3. 清理已损坏的文件
+
+需要识别并删除存储桶中已损坏的 HEIC 文件（以 `.jpg` 扩展名存储但内容为 HEIC 的文件）。通过登录后在照片墙中点击破损图片，使用 Delete 功能手动删除。
 
 ---
 
@@ -57,37 +57,26 @@ await supabase.auth.getSession();
 
 ### 文件变更
 
-| 文件 | 变更内容 |
-|------|----------|
-| SQL 迁移 | 更新 `photos` 存储桶的 `allowed_mime_types` |
-| `src/components/PhotoWall.tsx` | 1. `compressImage` 增加 HEIC 降级处理 2. 上传前刷新 token |
+| 文件 | 变更 |
+|------|------|
+| `src/components/PhotoWall.tsx` | 1. `compressImage` 返回 `CompressResult` 对象 2. `handleUpload` 检查 `isOriginal` 标志并拒绝不可渲染的格式 |
 
-### `compressImage` 修改逻辑
-
-```text
-const compressImage = (file: File, maxWidth = 1200): Promise<Blob> => {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      // 正常压缩逻辑（不变）
-    };
-    img.onerror = () => {
-      // 新增：渲染失败时返回原始文件
-      console.warn(`Cannot render ${file.name} in browser, using original`);
-      resolve(file);
-    };
-    img.src = URL.createObjectURL(file);
-  });
-};
-```
-
-### 上传前 token 刷新
-
-在 `handleUpload` 的 `setUploading(true)` 后立即插入：
+### 修改后的上传流程
 
 ```text
-await supabase.auth.getSession();
+用户选择文件
+  -> 验证文件类型（Magic Bytes）
+  -> compressImage() 尝试压缩
+    -> 成功: 返回 { blob: jpegBlob, isOriginal: false }
+    -> 失败 (HEIC等): 返回 { blob: originalFile, isOriginal: true }
+  -> 检查 isOriginal
+    -> true 且非浏览器可渲染格式: 跳过并提示用户
+    -> false 或浏览器可渲染格式: 上传
 ```
 
-这会触发 Supabase SDK 检查 token 是否即将过期并自动刷新。
+### 为什么不使用客户端 HEIC 转换库
+
+- `heic2any` 等库体积较大（~200KB+），会增加首屏加载时间
+- 该网站是轻量级情侣纪念页面，不适合引入重型依赖
+- 更好的方案是引导用户在 iOS 设置中将相机格式改为「兼容性最佳」（JPG）
 
