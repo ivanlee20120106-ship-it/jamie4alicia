@@ -38,7 +38,7 @@ const HeroSection = () => {
     <section className="relative z-10 flex flex-col items-center justify-center min-h-screen px-3 sm:px-4 pt-24 sm:pt-28 py-12 sm:py-20">
       {/* Names */}
       <h1 className="font-script text-4xl sm:text-5xl md:text-7xl lg:text-8xl text-gradient-love glow-gold mb-8 sm:mb-12 animate-fade-in-up">
-        Jamie & Alica
+        Jamie & Alicia
       </h1>
 
       {/* Birthdays with hearts in between */}
