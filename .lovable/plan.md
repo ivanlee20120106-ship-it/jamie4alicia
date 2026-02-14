@@ -1,82 +1,36 @@
 
+# 照片墙优化：去除编号 + Bug 修复
 
-# 照片墙编号 + 左右方向键导航
+## 1. 去除照片左上角数字
 
-## 功能概述
+从截图和代码中确认，每个照片格子上有一个半透明编号标签（01-36）。需要删除 `PhotoWall.tsx` 中第 266-268 行的 `<span>` 标签及相关的 `label` 变量（第 258 行）。
 
-1. 在照片墙每个格子上叠加显示编号（01-36），按从左到右、从上到下的顺序
-2. 在 Lightbox（照片放大浏览）中添加左右箭头按钮，支持在照片之间切换
-3. 第 1 张照片（01）不显示左箭头，最后一张照片不显示右箭头
+## 2. 移动端显示检查结果
 
-## 具体改动
+已在 390px 宽度下测试，发现以下情况：
+- 照片墙心形布局正常显示，未溢出屏幕
+- 照片格子尺寸为 34px，整体心形可辨识
+- Lightbox 弹窗正常，左右导航箭头和键盘操作均正常
+- 第 1 张照片无左箭头，最后一张无右箭头，逻辑正确
 
-### 1. `src/components/PhotoWall.tsx`
+**无需修改移动端布局。**
 
-- 将 `selectedPhoto` 从存储照片名称改为存储**照片索引**（数字），方便左右导航
-- 在心形网格渲染中，每个有照片的格子叠加一个半透明编号标签（如 "01", "02"...），使用 `absolute` 定位在左上角
-- 将照片列表 `photos` 传递给 `PhotoLightbox`，同时传入当前选中的索引和切换回调
+## 3. 发现的 Bug
 
-### 2. `src/components/PhotoLightbox.tsx`
+### Bug 1：未使用的导入 `Heart`
+第 3 行导入了 `Heart` 图标但未使用，应移除。
 
-- 接口改为接收整个照片列表、当前索引、以及 `onPrev` / `onNext` 回调
-- 添加左右箭头按钮（使用 lucide-react 的 `ChevronLeft` / `ChevronRight`）
-- 当索引为 0 时隐藏左箭头；当索引为最后一张时隐藏右箭头
-- 添加键盘事件监听（`ArrowLeft` / `ArrowRight`），支持键盘操作
+### Bug 2：未使用的常量 `FILLED_CELLS`
+第 17 行定义了 `FILLED_CELLS` 但从未使用，应移除。
 
-## 技术细节
+### Bug 3：`CompressResult.isOriginal` 未被使用
+`compressImage` 返回 `isOriginal` 字段，但调用处（第 168 行）解构时只取了 `blob`，`isOriginal` 已无用途（HEIC 转换后不再需要判断）。可移除该字段简化接口。
 
-### PhotoWall 状态变更
+### Bug 4：渲染中使用可变变量 `photoIndex`
+第 218 行的 `let photoIndex = 0` 在 render 函数体中作为可变计数器使用。在 React Strict Mode（开发模式下双重渲染）中可能导致编号错乱。应改为在 `map` 回调中通过累计 `HEART_GRID` 前面的 filled cells 来计算索引，而非依赖外部可变变量。
 
-```text
-// 之前
-const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+## 技术改动
 
-// 之后
-const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-```
-
-### PhotoLightbox 接口变更
-
-```text
-// 之前
-interface PhotoLightboxProps {
-  photoName: string;
-  onClose: () => void;
-  onDelete: (name: string) => void;
-  canDelete?: boolean;
-}
-
-// 之后
-interface PhotoLightboxProps {
-  photos: Photo[];
-  currentIndex: number;
-  onClose: () => void;
-  onDelete: (name: string) => void;
-  onPrev: () => void;
-  onNext: () => void;
-  canDelete?: boolean;
-}
-```
-
-### 编号标签样式
-
-在每个照片格子上叠加一个小标签，使用半透明黑底白字，不影响照片查看：
-
-```text
-<span className="absolute top-0.5 left-0.5 text-[8px] sm:text-[10px] 
-  bg-black/50 text-white rounded px-0.5 leading-tight">
-  {编号}
-</span>
-```
-
-### 键盘导航
-
-在 `PhotoLightbox` 中使用 `useEffect` 监听 `keydown` 事件，处理 `ArrowLeft` 和 `ArrowRight` 键。
-
-### 文件变更总结
-
-| 文件 | 变更 |
+| 文件 | 改动 |
 |------|------|
-| `src/components/PhotoWall.tsx` | 状态改为索引、格子叠加编号、传递导航回调给 Lightbox |
-| `src/components/PhotoLightbox.tsx` | 接收照片列表和索引、添加左右箭头按钮、键盘事件监听 |
-
+| `src/components/PhotoWall.tsx` | 移除编号 span、移除 Heart 导入、移除 FILLED_CELLS、移除 CompressResult.isOriginal、重构 photoIndex 为纯计算 |
