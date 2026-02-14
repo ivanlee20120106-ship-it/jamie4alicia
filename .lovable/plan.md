@@ -1,68 +1,77 @@
 
 
-# 照片墙移动端加载优化
+# 纪念日日期修改 + 代码优化
 
-## 问题分析
+## 1. 纪念日改为 2022.09.18
 
-当前照片墙的 36 张照片全部以原始分辨率（最大 1200px）加载，但缩略图在移动端仅为 34px、平板 55px、桌面 70px。这导致移动端需要下载大量不必要的数据，加载缓慢。
+**文件：`src/components/HeroSection.tsx`**
 
-## 解决方案
+- 第 9 行：`Date.UTC(2022, 8, 17)` 改为 `Date.UTC(2022, 8, 18)`（月份从 0 开始，8 = 九月）
+- 第 58 行：显示文字 `"2022.09.17"` 改为 `"2022.09.18"`
+- 天数计算自动根据新日期更新，无需额外修改
 
-利用 Supabase Storage 的图片变换功能，为缩略图生成小尺寸版本，Lightbox 中才加载原图。
-
-### 具体改动
-
-**文件：`src/components/PhotoWall.tsx`**
-
-1. 新增一个工具函数，通过 Supabase Storage 的 `render/image` transform endpoint 生成缩略图 URL：
-   - 缩略图使用 `width=150&resize=cover` 参数（覆盖所有屏幕尺寸的 2x 分辨率需求）
-   - Photo 接口新增 `thumbnailUrl` 字段
-
-2. 修改 `fetchPhotos` 中的 URL 生成逻辑：
-   - `url`：保持原图 URL（用于 Lightbox）
-   - `thumbnailUrl`：附加 transform 参数的缩略图 URL
-
-3. 网格渲染中的 `<img>` 标签使用 `thumbnailUrl` 替代 `url`
+## 2. 前端展示适配优化
 
 **文件：`src/components/PhotoLightbox.tsx`**
 
-- 无需改动，已使用 `photo.url`（原图）
+- Lightbox 中第 22 行重复调用 `getPublicUrl` 生成 URL，但 `photo.url` 已经是完整公开 URL，应直接使用 `photo.url`，避免冗余 API 调用
+- 图片添加 `draggable={false}` 和 `user-select: none` 防止移动端误拖拽
+- 为 Lightbox 图片区域添加 touch 滑动支持（左滑下一张，右滑上一张），提升移动端体验
 
-### 技术细节
+**文件：`src/components/PhotoWall.tsx`**
 
-Supabase Storage 图片变换 URL 格式：
+- `fetchPhotos` 添加错误兜底：当 `data` 为空时设置空数组，防止 UI 卡在加载状态
+- 为缩略图 `<img>` 添加 `decoding="async"` 属性，进一步优化渲染性能
+
+## 3. 存储和数据稳定性优化
+
+**文件：`src/components/PhotoWall.tsx`**
+
+- `handleDelete` 删除成功后先更新 `selectedIndex` 再调用 `fetchPhotos`，避免短暂的索引越界闪烁
+- `uploadWithRetry` 增加对网络错误的区分：仅在网络/超时错误时重试，权限错误（403/401）立即失败并提示重新登录
+
+**文件：`src/components/MusicButton.tsx`**
+
+- 无改动，当前实现已稳定
+
+## 技术细节
+
+### HeroSection 日期修改
+
 ```text
-{publicUrl}?width=150&resize=cover&quality=75
+// 第 9 行
+const annivUtc8Ms = Date.UTC(2022, 8, 18) + 8 * 3600000;
+
+// 第 58 行
+<DateBadge date="2022.09.18" label="Anniversary" large />
 ```
 
-Photo 接口变更：
+### PhotoLightbox 优化
+
 ```text
-interface Photo {
-  name: string;
-  url: string;         // 原图，用于 Lightbox
-  thumbnailUrl: string; // 缩略图，用于网格
-}
+// 移除第 22 行的冗余 getPublicUrl 调用
+const url = photo.url;  // 直接使用已有的 url
+
+// 添加触摸滑动支持
+const touchStartX = useRef(0);
+onTouchStart: 记录起始 X
+onTouchEnd: 计算滑动距离，超过 50px 触发切换
 ```
 
-fetchPhotos 改动：
+### PhotoWall 稳定性
+
 ```text
-.map((f) => {
-  const publicUrl = supabase.storage.from("photos").getPublicUrl(f.name).data.publicUrl;
-  return {
-    name: f.name,
-    url: publicUrl,
-    thumbnailUrl: `${publicUrl}?width=150&resize=cover&quality=75`,
-  };
-})
+// handleDelete 优化顺序
+setSelectedIndex(null);  // 先关闭 lightbox
+await fetchPhotos();     // 再刷新列表
+
+// fetchPhotos 兜底
+if (error) { console.error(error); setPhotos([]); return; }
 ```
-
-### 预期效果
-
-- 每张缩略图从约 100-300KB 降至约 5-15KB
-- 36 张照片总加载量从约 5-10MB 降至约 200-500KB
-- 移动端加载速度提升 10-20 倍
 
 | 文件 | 改动 |
 |------|------|
-| `src/components/PhotoWall.tsx` | Photo 接口新增 thumbnailUrl、fetchPhotos 生成缩略图 URL、网格 img 使用缩略图 |
+| `src/components/HeroSection.tsx` | 日期从 17 改为 18（计算 + 显示） |
+| `src/components/PhotoLightbox.tsx` | 移除冗余 URL 生成、添加触摸滑动、防拖拽 |
+| `src/components/PhotoWall.tsx` | 添加 decoding=async、错误兜底、删除顺序优化 |
 
