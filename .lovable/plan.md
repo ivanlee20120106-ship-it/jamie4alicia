@@ -1,46 +1,29 @@
 
 
-# 图片上传功能 Bug 检查报告与修复计划
+# 调整照片上传权限与限制
 
-## 发现的 Bug
+## 现状分析
 
-### Bug 1: 移动端心形网格溢出 (严重)
+1. **权限**：后端存储策略已正确配置 -- 上传需登录 (`auth.uid() IS NOT NULL`)，删除需所有者身份。前端也已通过 `user` 状态控制上传按钮和删除按钮的显示，**权限逻辑无需修改**。
 
-9 列网格在移动端 (390px) 宽度下溢出屏幕：
-- 计算：9 x 40px + 8 x 6px (gap-1.5) = 408px
-- 可用宽度：390px - 24px (px-3 padding) = 366px
-- **结果：网格右侧被裁切，照片显示不完整**
+2. **照片上限**：当前 `MAX_PHOTOS = 34`，但心形网格实际有 36 个填充格子（4+7+9+7+5+3+1=36），需改为 36。
 
-### Bug 2: compressImage 小图会被放大 (中等)
+3. **文件大小**：当前限制为 10MB，需改为 5MB。
 
-```text
-const ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
-```
-当原图尺寸小于 1200px 时，ratio > 1，图片会被放大导致模糊且文件变大。应限制 ratio 不超过 1。
-
-### Bug 3: ObjectURL 内存泄漏 (轻微)
-
-`compressImage` 中 `URL.createObjectURL(file)` 创建的临时 URL 从未被 `URL.revokeObjectURL()` 释放，频繁上传会导致内存泄漏。
-
-### Bug 4: 部分失败时仍显示成功提示 (中等)
-
-即使某些照片验证失败或上传出错，第 120 行的 `toast.success("Photos uploaded successfully!")` 仍会执行，给用户错误的反馈。
-
-### Bug 5: iOS HEIC 格式处理不友好 (轻微)
-
-iOS 相机默认拍摄 HEIC 格式，`accept="image/*"` 允许选择 HEIC 文件，但 Magic Bytes 验证会拒绝它，用户只会看到一个通用错误提示。
-
----
-
-## 修复方案
+## 修改内容
 
 ### 文件：`src/components/PhotoWall.tsx`
 
-| Bug | 修复内容 |
-|-----|---------|
-| Bug 1 | 将移动端单元格从 40px 缩小至 34px，使总宽度为 9x34 + 8x6 = 354px，适配 390px 屏幕 |
-| Bug 2 | 在 ratio 计算后加 `Math.min(ratio, 1)` 防止放大 |
-| Bug 3 | 在 `img.onload` 回调开头添加 `URL.revokeObjectURL(img.src)` |
-| Bug 4 | 添加成功/失败计数器，根据实际结果显示对应提示 |
-| Bug 5 | 在 MIME/扩展名检查中加入 HEIC/HEIF，并在 Magic Bytes 错误提示中提醒 iOS 用户切换为 JPG 格式 |
+| 项目 | 当前值 | 修改后 |
+|------|--------|--------|
+| `MAX_PHOTOS` | 34 | 36 |
+| 文件大小限制 | `10 * 1024 * 1024` (10MB) | `5 * 1024 * 1024` (5MB) |
+| 错误提示文案 | "exceeds 10MB limit" | "超过 5MB 大小限制" |
+
+共修改 2 处常量值和 1 处提示文案，改动量极小。
+
+### 技术细节
+
+- 第 24 行：`const MAX_PHOTOS = 34;` 改为 `const MAX_PHOTOS = 36;`
+- 第 118 行：`file.size > 10 * 1024 * 1024` 改为 `file.size > 5 * 1024 * 1024`，提示改为中文 `"超过 5MB 大小限制"`
 
