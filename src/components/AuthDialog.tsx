@@ -58,7 +58,7 @@ const AuthDialog = ({ user, onSignIn, onSignUp, onSignOut }: AuthDialogProps) =>
         className="group flex items-center gap-2 px-3 py-2 rounded-full border border-gold/30 bg-card/40 backdrop-blur-sm hover:border-gold/60 hover:shadow-[0_0_16px_hsl(var(--gold)/0.25)] transition-all duration-300"
       >
         <Heart size={16} className="text-gold fill-gold/30 group-hover:fill-gold/60 transition-colors duration-300" />
-        <span className="hidden sm:inline text-sm text-gold font-body">Sign In</span>
+        <span className="hidden sm:inline text-sm text-gold font-body italic">Sign In</span>
       </button>
 
       {isOpen && createPortal(
@@ -67,7 +67,7 @@ const AuthDialog = ({ user, onSignIn, onSignUp, onSignOut }: AuthDialogProps) =>
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center gap-2">
                 <Heart size={18} className="text-love fill-love/40" />
-                <h3 className="text-lg font-display text-foreground">{isSignUp ? "Create Account" : "Sign In"}</h3>
+                <h3 className="text-lg font-display italic text-foreground">{isSignUp ? "Create Account" : "Sign In"}</h3>
               </div>
               <button onClick={() => setIsOpen(false)} className="text-muted-foreground hover:text-foreground"><X size={18} /></button>
             </div>
@@ -92,14 +92,14 @@ const AuthDialog = ({ user, onSignIn, onSignUp, onSignOut }: AuthDialogProps) =>
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full py-2 rounded-lg bg-gradient-to-r from-love to-love-glow text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+                className="w-full py-2 rounded-lg bg-gradient-to-r from-love to-love-glow text-white font-body text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
               >
                 {submitting ? "..." : isSignUp ? "Sign Up" : "Sign In"}
               </button>
             </form>
             <button
               onClick={() => setIsSignUp(!isSignUp)}
-              className="mt-3 text-xs text-muted-foreground hover:text-foreground transition-colors w-full text-center"
+              className="mt-3 font-body italic text-xs text-muted-foreground hover:text-foreground transition-colors w-full text-center"
             >
               {isSignUp ? "Already have an account? Sign in" : "Need an account? Sign up"}
             </button>

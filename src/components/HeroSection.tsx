@@ -69,7 +69,7 @@ const HeroSection = () => {
   return (
     <section className="relative z-10 flex flex-col items-center justify-center min-h-screen px-3 sm:px-4 pt-24 sm:pt-28 py-12 sm:py-20">
       {/* Names */}
-      <h1 className="font-script text-4xl sm:text-5xl md:text-7xl lg:text-8xl text-gradient-love glow-gold mb-8 sm:mb-12 animate-fade-in-up">
+      <h1 className="font-script italic text-4xl sm:text-5xl md:text-7xl lg:text-8xl text-gradient-love glow-gold mb-8 sm:mb-12 animate-fade-in-up">
         Jamie & Alicia
       </h1>
 
@@ -100,14 +100,14 @@ const HeroSection = () => {
         />
 
         <div className="text-center">
-          <p className="text-muted-foreground text-sm sm:text-lg mb-2">We have been together for</p>
+          <p className="font-body italic tracking-wide text-muted-foreground text-sm sm:text-lg mb-2">We have been together for</p>
           <div className="flex items-baseline gap-2 justify-center">
-            <span className="font-display text-5xl sm:text-6xl md:text-8xl text-gradient-love font-bold glow-gold">
+            <span className="font-display text-5xl sm:text-6xl md:text-8xl text-gradient-love font-bold tracking-tight glow-gold">
               {days}
             </span>
-            <span className="text-xl sm:text-2xl text-gold">days</span>
+            <span className="font-body italic text-xl sm:text-2xl text-gold">days</span>
           </div>
-          <p className="text-muted-foreground text-lg mt-2">Every day is the best day</p>
+          <p className="font-script text-xl sm:text-2xl text-gold/80 mt-2">Every day is the best day</p>
         </div>
 
         <MilestoneBadge
@@ -130,10 +130,10 @@ const HeroSection = () => {
 
 const MilestoneBadge = ({ ordinal, title, subtitle, suffix }: { ordinal: number; title: string; subtitle: string; suffix: string }) => (
   <div className="text-center px-6 py-4 rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm flex flex-col justify-center min-w-[180px]">
-    <p className="font-display text-2xl sm:text-3xl text-gold glow-gold">
+    <p className="font-display tracking-wide text-2xl sm:text-3xl text-gold glow-gold">
       {getOrdinal(ordinal)} {title}
     </p>
-    <p className="text-sm text-muted-foreground mt-1">
+    <p className="font-body italic text-sm text-muted-foreground mt-1">
       {subtitle} {getOrdinal(ordinal)} {suffix}
     </p>
   </div>
@@ -141,10 +141,10 @@ const MilestoneBadge = ({ ordinal, title, subtitle, suffix }: { ordinal: number;
 
 const DateBadge = ({ date, label, large }: { date: string; label: string; large?: boolean }) => (
   <div className={`text-center ${large ? "px-8 py-4" : "px-4 py-2"} rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm`}>
-    <p className={`font-display ${large ? "text-2xl sm:text-3xl" : "text-lg sm:text-xl"} text-gold glow-gold`}>
+    <p className={`font-display tracking-widest font-light ${large ? "text-2xl sm:text-3xl" : "text-lg sm:text-xl"} text-gold glow-gold`}>
       {date}
     </p>
-    <p className={`${large ? "text-base" : "text-sm"} text-muted-foreground mt-1`}>
+    <p className={`font-body italic tracking-wide ${large ? "text-base" : "text-sm"} text-muted-foreground mt-1`}>
       {label}
     </p>
   </div>
