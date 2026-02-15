@@ -129,7 +129,7 @@ const HeroSection = () => {
 };
 
 const MilestoneBadge = ({ ordinal, title, subtitle, suffix }: { ordinal: number; title: string; subtitle: string; suffix: string }) => (
-  <div className="text-center px-6 py-4 rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm flex flex-col justify-center min-w-[180px]">
+  <div className="text-center px-8 py-6 rounded-xl border border-gold/20 border-t-gold/40 bg-gradient-to-br from-card/70 via-card/50 to-muted/30 backdrop-blur-md shadow-[0_4px_24px_hsl(var(--gold)/0.06),inset_0_1px_0_hsl(var(--gold)/0.12)] transition-all duration-300 hover:scale-[1.02] hover:border-gold/30 hover:shadow-[0_8px_32px_hsl(var(--gold)/0.1)] flex flex-col justify-center min-w-[200px]">
     <p className="font-display tracking-wide text-2xl sm:text-3xl text-gold glow-gold">
       {getOrdinal(ordinal)} {title}
     </p>
@@ -140,7 +140,7 @@ const MilestoneBadge = ({ ordinal, title, subtitle, suffix }: { ordinal: number;
 );
 
 const DateBadge = ({ date, label, large }: { date: string; label: string; large?: boolean }) => (
-  <div className={`text-center ${large ? "px-8 py-4" : "px-4 py-2"} rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm`}>
+  <div className={`text-center rounded-xl backdrop-blur-md transition-all duration-300 ${large ? "px-10 py-5 border border-gold/25 bg-gradient-to-br from-card/70 via-card/50 to-muted/30 shadow-[0_4px_24px_hsl(var(--gold)/0.08),inset_0_1px_0_hsl(var(--gold)/0.15)] hover:border-gold/35 hover:shadow-[0_6px_32px_hsl(var(--gold)/0.12)]" : "px-5 py-3 border border-gold/20 bg-gradient-to-br from-card/60 via-card/50 to-muted/30 shadow-[0_2px_16px_hsl(var(--gold)/0.06),inset_0_1px_0_hsl(var(--gold)/0.1)] hover:border-gold/30 hover:shadow-[0_4px_24px_hsl(var(--gold)/0.1)]"}`}>
     <p className={`font-display tracking-widest font-light ${large ? "text-2xl sm:text-3xl" : "text-lg sm:text-xl"} text-gold glow-gold`}>
       {date}
     </p>
