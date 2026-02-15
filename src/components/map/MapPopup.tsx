@@ -46,7 +46,7 @@ const MapPopup = ({
 
       {/* Image with spinner */}
       {imageUrl && (
-        <div className="relative w-full h-28 mb-2 rounded overflow-hidden bg-muted/30">
+        <div className="relative w-full aspect-square mb-2 rounded overflow-hidden bg-muted/30">
           {!imgLoaded && (
             <div className="absolute inset-0 flex items-center justify-center">
               <Loader2 size={20} className="animate-spin" style={{ color: "#999" }} />
