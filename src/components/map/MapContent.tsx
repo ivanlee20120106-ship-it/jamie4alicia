@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback } from "react";
 import { TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import MapMarker from "./MapMarker";
@@ -15,6 +15,7 @@ interface TravelMarker {
   description: string | null;
   visit_date: string | null;
   image_url: string | null;
+  compressed_url?: string | null;
   user_id: string;
 }
 
@@ -51,9 +52,7 @@ const MapContent = ({ markers, canDelete, onDelete, onAddMarker, autoOpenId }: M
     setDynamicMarkers((prev) => [...prev.filter((m) => m.type !== "searched"), { lat, lng, name, type: "searched", address: name }]);
   }, []);
 
-  const handleLocate = useCallback((_lat: number, _lng: number) => {
-    // no-op, locate removed
-  }, []);
+  const handleLocate = useCallback((_lat: number, _lng: number) => {}, []);
 
   return (
     <>
@@ -64,7 +63,6 @@ const MapContent = ({ markers, canDelete, onDelete, onAddMarker, autoOpenId }: M
         keepBuffer={2}
       />
 
-      {/* Database markers */}
       {markers.map((m) => (
         <MapMarker
           key={m.id}
@@ -74,6 +72,7 @@ const MapContent = ({ markers, canDelete, onDelete, onAddMarker, autoOpenId }: M
           lng={m.lng}
           type={m.type as "visited" | "planned"}
           imageUrl={m.image_url}
+          compressedUrl={m.compressed_url}
           description={m.description}
           canDelete={canDelete}
           onDelete={onDelete}
@@ -81,37 +80,18 @@ const MapContent = ({ markers, canDelete, onDelete, onAddMarker, autoOpenId }: M
         />
       ))}
 
-      {/* Clicked marker */}
       {clicked && (
         <Marker position={[clicked.lat, clicked.lng]} icon={clickedIcon}>
           <Popup eventHandlers={{ remove: clearClicked }}>
-            <MapPopup
-              name="Clicked Location"
-              lat={clicked.lat}
-              lng={clicked.lng}
-              type="clicked"
-              address={clicked.address}
-              addressLoading={clicked.loading}
-            />
+            <MapPopup name="Clicked Location" lat={clicked.lat} lng={clicked.lng} type="clicked" address={clicked.address} addressLoading={clicked.loading} />
           </Popup>
         </Marker>
       )}
 
-      {/* Dynamic markers (searched, live) */}
       {dynamicMarkers.map((dm, i) => (
-        <Marker
-          key={`${dm.type}-${i}`}
-          position={[dm.lat, dm.lng]}
-          icon={dm.type === "searched" ? searchedIcon : liveIcon}
-        >
+        <Marker key={`${dm.type}-${i}`} position={[dm.lat, dm.lng]} icon={dm.type === "searched" ? searchedIcon : liveIcon}>
           <Popup>
-            <MapPopup
-              name={dm.name}
-              lat={dm.lat}
-              lng={dm.lng}
-              type={dm.type}
-              address={dm.address}
-            />
+            <MapPopup name={dm.name} lat={dm.lat} lng={dm.lng} type={dm.type} address={dm.address} />
           </Popup>
         </Marker>
       ))}

@@ -16,6 +16,7 @@ interface TravelMarker {
   description: string | null;
   visit_date: string | null;
   image_url: string | null;
+  compressed_url?: string | null;
   user_id: string;
 }
 
@@ -29,9 +30,34 @@ const TravelMap = () => {
   const [clickedLatLng, setClickedLatLng] = useState<[number, number] | null>(null);
 
   const fetchMarkers = useCallback(async () => {
-    const { data, error } = await supabase.from("travel_markers" as any).select("*").order("created_at", { ascending: false });
+    // Fetch markers with optional photo relationship for compressed_path
+    const { data, error } = await supabase
+      .from("travel_markers" as any)
+      .select("*, photos:photo_id(compressed_path)")
+      .order("created_at", { ascending: false });
+
     if (error) { console.error(error); return; }
-    setMarkers((data as any as TravelMarker[]) ?? []);
+
+    const mapped = ((data as any[]) ?? []).map((m: any) => {
+      let compressedUrl: string | null = null;
+      if (m.photos?.compressed_path) {
+        compressedUrl = supabase.storage.from("marker-images").getPublicUrl(m.photos.compressed_path).data.publicUrl;
+      }
+      return {
+        id: m.id,
+        name: m.name,
+        lat: m.lat,
+        lng: m.lng,
+        type: m.type,
+        description: m.description,
+        visit_date: m.visit_date,
+        image_url: m.image_url,
+        compressed_url: compressedUrl,
+        user_id: m.user_id,
+      } as TravelMarker;
+    });
+
+    setMarkers(mapped);
   }, []);
 
   useEffect(() => { fetchMarkers(); }, [fetchMarkers]);
@@ -41,7 +67,6 @@ const TravelMap = () => {
     [markers, filter]
   );
 
-  // Pick a random marker to auto-open on load
   const autoOpenId = useMemo(() => {
     if (markers.length === 0) return undefined;
     return markers[Math.floor(Math.random() * markers.length)].id;
@@ -75,7 +100,6 @@ const TravelMap = () => {
           Our Journey Map
         </h2>
 
-        {/* Filter bar */}
         <div className="flex justify-center gap-2 mb-4">
           {filterButtons.map((b) => (
             <button
@@ -92,7 +116,6 @@ const TravelMap = () => {
           ))}
         </div>
 
-        {/* Map */}
         <div className="rounded-xl overflow-hidden border border-gold/20 shadow-[0_4px_24px_hsl(var(--gold)/0.08)] backdrop-blur-md relative">
           <MapContainer
             center={[20, 105]}
@@ -114,7 +137,6 @@ const TravelMap = () => {
           </MapContainer>
         </div>
 
-        {/* Add place button */}
         {user && (
           <div className="flex justify-center mt-4">
             <button

@@ -6,6 +6,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { generateSizes } from "@/lib/imageProcessing";
 
 interface AddMarkerDialogProps {
   isOpen: boolean;
@@ -54,53 +55,57 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
     }
   }, [clickedLatLng]);
 
-  const compressImage = async (file: File): Promise<Blob> => {
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const maxW = 1200;
-        let w = img.width, h = img.height;
-        if (w > maxW) { h = (maxW / w) * h; w = maxW; }
-        canvas.width = w;
-        canvas.height = h;
-        canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
-        canvas.toBlob((blob) => resolve(blob!), "image/jpeg", 0.85);
-      };
-      img.src = URL.createObjectURL(file);
-    });
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) {
-      toast.error("Please enter a place name");
-      return;
-    }
+    if (!name.trim()) { toast.error("Please enter a place name"); return; }
 
     setSubmitting(true);
     try {
-      // Refresh session
       await supabase.auth.refreshSession();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { toast.error("Please sign in first"); setSubmitting(false); return; }
 
+      let photoId: string | null = null;
       let imageUrl: string | null = null;
 
       if (imageFile) {
-        if (imageFile.size > 10 * 1024 * 1024) {
-          toast.error("Image must be under 10MB");
-          setSubmitting(false);
-          return;
-        }
-        const compressed = await compressImage(imageFile);
-        const path = `${user.id}/${Date.now()}-${imageFile.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-        const { error: uploadErr } = await supabase.storage
-          .from("marker-images")
-          .upload(path, compressed, { contentType: "image/jpeg" });
-        if (uploadErr) throw uploadErr;
-        const { data: urlData } = supabase.storage.from("marker-images").getPublicUrl(path);
-        imageUrl = urlData.publicUrl;
+        if (imageFile.size > 10 * 1024 * 1024) { toast.error("Image must be under 10MB"); setSubmitting(false); return; }
+
+        const { original, medium, thumbnail, dimensions, isHeif } = await generateSizes(imageFile);
+        const uuid = crypto.randomUUID();
+        const basePath = `${user.id}/${uuid}`;
+
+        // Upload all 3 sizes to marker-images bucket
+        const [okOrig, okMid, okThumb] = await Promise.all([
+          supabase.storage.from("marker-images").upload(`${basePath}.jpg`, original, { contentType: "image/jpeg" }).then(r => !r.error),
+          supabase.storage.from("marker-images").upload(`${basePath}_mid.jpg`, medium, { contentType: "image/jpeg" }).then(r => !r.error),
+          supabase.storage.from("marker-images").upload(`${basePath}_thumb.jpg`, thumbnail, { contentType: "image/jpeg" }).then(r => !r.error),
+        ]);
+
+        if (!okOrig) throw new Error("Image upload failed");
+
+        const storagePath = `${basePath}.jpg`;
+        imageUrl = supabase.storage.from("marker-images").getPublicUrl(storagePath).data.publicUrl;
+
+        // Insert into photos table
+        const { data: photoRow, error: photoErr } = await supabase.from("photos").insert({
+          filename: `${uuid}.jpg`,
+          original_filename: imageFile.name,
+          file_size: original.size,
+          mime_type: "image/jpeg",
+          width: dimensions.width,
+          height: dimensions.height,
+          storage_path: storagePath,
+          thumbnail_path: okThumb ? `${basePath}_thumb.jpg` : null,
+          compressed_path: okMid ? `${basePath}_mid.jpg` : null,
+          is_heif: isHeif,
+          latitude: parseFloat(lat) || null,
+          longitude: parseFloat(lng) || null,
+          location_name: name.trim(),
+          user_id: user.id,
+        }).select("id").single();
+
+        if (!photoErr && photoRow) photoId = photoRow.id;
       }
 
       const parsedLat = parseFloat(lat);
@@ -119,6 +124,7 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
         description: description.trim() || null,
         visit_date: visitDate ? format(visitDate, "yyyy-MM-dd") : null,
         image_url: imageUrl,
+        photo_id: photoId,
         user_id: user.id,
       } as any);
 
@@ -126,7 +132,6 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
       toast.success("Place added successfully!");
       onAdded();
       onClose();
-      // Reset
       setName(""); setDescription(""); setVisitDate(undefined); setImageFile(null); setLat(""); setLng("");
     } catch (err: any) {
       toast.error(err.message || "Failed to add place");
@@ -192,39 +197,19 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
           </div>
 
           <div className="grid grid-cols-2 gap-2">
-            <input
-              type="number"
-              step="any"
-              placeholder="Latitude"
-              value={lat}
-              onChange={(e) => setLat(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-gold/50"
-            />
-            <input
-              type="number"
-              step="any"
-              placeholder="Longitude"
-              value={lng}
-              onChange={(e) => setLng(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-gold/50"
-            />
+            <input type="number" step="any" placeholder="Latitude" value={lat} onChange={(e) => setLat(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-gold/50" />
+            <input type="number" step="any" placeholder="Longitude" value={lng} onChange={(e) => setLng(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-gold/50" />
           </div>
           <p className="text-[10px] text-muted-foreground font-body -mt-1">💡 You can also tap on the map to pick a location</p>
 
-          <textarea
-            placeholder="Description (optional)"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={2}
-            className="w-full px-3 py-2 rounded-lg bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-gold/50 resize-none"
-          />
+          <textarea placeholder="Description (optional)" value={description} onChange={(e) => setDescription(e.target.value)} rows={2}
+            className="w-full px-3 py-2 rounded-lg bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-gold/50 resize-none" />
 
           <Popover>
             <PopoverTrigger asChild>
-              <button
-                type="button"
-                className="w-full px-3 py-2 rounded-lg bg-background border border-border text-sm text-left flex items-center gap-2 text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50"
-              >
+              <button type="button" className="w-full px-3 py-2 rounded-lg bg-background border border-border text-sm text-left flex items-center gap-2 text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50">
                 <CalendarIcon size={16} className="text-muted-foreground" />
                 <span className={visitDate ? "text-foreground" : "text-muted-foreground"}>
                   {visitDate ? format(visitDate, "dd/MM/yyyy") : "Select a date"}
@@ -232,13 +217,7 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
               </button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0 z-[60]" align="start">
-              <Calendar
-                mode="single"
-                selected={visitDate}
-                onSelect={setVisitDate}
-                initialFocus
-                className="pointer-events-auto"
-              />
+              <Calendar mode="single" selected={visitDate} onSelect={setVisitDate} initialFocus className="pointer-events-auto" />
             </PopoverContent>
           </Popover>
 
@@ -247,19 +226,11 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
             <span className="text-sm text-muted-foreground font-body">
               {imageFile ? imageFile.name : "Upload a photo (max 10MB)"}
             </span>
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
-            />
+            <input type="file" accept="image/*" className="hidden" onChange={(e) => setImageFile(e.target.files?.[0] ?? null)} />
           </label>
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full py-2.5 rounded-lg bg-gradient-to-r from-gold to-love text-background font-body text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
-          >
+          <button type="submit" disabled={submitting}
+            className="w-full py-2.5 rounded-lg bg-gradient-to-r from-gold to-love text-background font-body text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2">
             {submitting ? <><Loader2 size={14} className="animate-spin" /> Adding...</> : "Add Place"}
           </button>
         </form>
