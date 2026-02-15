@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Photo {
+  id?: string;
   name: string;
   url: string;
 }
@@ -10,7 +11,7 @@ interface PhotoLightboxProps {
   photos: Photo[];
   currentIndex: number;
   onClose: () => void;
-  onDelete: (name: string) => void;
+  onDelete: (idOrName: string) => void;
   onPrev: () => void;
   onNext: () => void;
   canDelete?: boolean;
@@ -22,6 +23,17 @@ const PhotoLightbox = ({ photos, currentIndex, onClose, onDelete, onPrev, onNext
   const isFirst = currentIndex === 0;
   const isLast = currentIndex === photos.length - 1;
   const touchStartX = useRef(0);
+
+  // Preload adjacent images
+  useEffect(() => {
+    const preloadUrls: string[] = [];
+    if (currentIndex + 1 < photos.length) preloadUrls.push(photos[currentIndex + 1].url);
+    if (currentIndex - 1 >= 0) preloadUrls.push(photos[currentIndex - 1].url);
+    preloadUrls.forEach((src) => {
+      const img = new Image();
+      img.src = src;
+    });
+  }, [currentIndex, photos]);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -45,6 +57,8 @@ const PhotoLightbox = ({ photos, currentIndex, onClose, onDelete, onPrev, onNext
     }
   };
 
+  const deleteKey = photo.id || photo.name;
+
   return (
     <div
       className="fixed inset-0 z-50 bg-background/90 backdrop-blur-md flex items-center justify-center p-4"
@@ -52,41 +66,23 @@ const PhotoLightbox = ({ photos, currentIndex, onClose, onDelete, onPrev, onNext
     >
       <div className="relative max-w-3xl max-h-[90vh] flex items-center gap-2 sm:gap-4" onClick={(e) => e.stopPropagation()}>
         {!isFirst && (
-          <button
-            onClick={onPrev}
-            className="shrink-0 p-1.5 sm:p-2 rounded-full bg-card/80 border border-border text-foreground hover:bg-card transition-colors"
-          >
+          <button onClick={onPrev} className="shrink-0 p-1.5 sm:p-2 rounded-full bg-card/80 border border-border text-foreground hover:bg-card transition-colors">
             <ChevronLeft size={20} />
           </button>
         )}
         {isFirst && <div className="w-[32px] sm:w-[40px] shrink-0" />}
 
-        <div
-          className="flex flex-col items-center"
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-        >
-          <img
-            src={url}
-            alt="photo"
-            className="max-w-full max-h-[75vh] rounded-lg object-contain select-none"
-            draggable={false}
-          />
+        <div className="flex flex-col items-center" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+          <img src={url} alt="photo" className="max-w-full max-h-[75vh] rounded-lg object-contain select-none" draggable={false} />
           <span className="font-display tracking-widest text-muted-foreground text-xs mt-2">
             {String(currentIndex + 1).padStart(2, "0")} / {String(photos.length).padStart(2, "0")}
           </span>
           <div className="flex gap-3 justify-center mt-3">
-            <button
-              onClick={onClose}
-              className="font-body px-4 py-2 rounded-lg bg-card border border-border text-foreground hover:border-love transition-colors"
-            >
+            <button onClick={onClose} className="font-body px-4 py-2 rounded-lg bg-card border border-border text-foreground hover:border-love transition-colors">
               Close
             </button>
             {canDelete && (
-              <button
-                onClick={() => onDelete(photo.name)}
-                className="font-body px-4 py-2 rounded-lg bg-destructive text-destructive-foreground hover:opacity-80 transition-opacity"
-              >
+              <button onClick={() => onDelete(deleteKey)} className="font-body px-4 py-2 rounded-lg bg-destructive text-destructive-foreground hover:opacity-80 transition-opacity">
                 Delete
               </button>
             )}
@@ -94,10 +90,7 @@ const PhotoLightbox = ({ photos, currentIndex, onClose, onDelete, onPrev, onNext
         </div>
 
         {!isLast && (
-          <button
-            onClick={onNext}
-            className="shrink-0 p-1.5 sm:p-2 rounded-full bg-card/80 border border-border text-foreground hover:bg-card transition-colors"
-          >
+          <button onClick={onNext} className="shrink-0 p-1.5 sm:p-2 rounded-full bg-card/80 border border-border text-foreground hover:bg-card transition-colors">
             <ChevronRight size={20} />
           </button>
         )}

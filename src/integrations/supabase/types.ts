@@ -14,6 +14,152 @@ export type Database = {
   }
   public: {
     Tables: {
+      photo_wall_items: {
+        Row: {
+          added_at: string | null
+          id: string
+          photo_id: string
+          sort_order: number | null
+          wall_id: string
+        }
+        Insert: {
+          added_at?: string | null
+          id?: string
+          photo_id: string
+          sort_order?: number | null
+          wall_id: string
+        }
+        Update: {
+          added_at?: string | null
+          id?: string
+          photo_id?: string
+          sort_order?: number | null
+          wall_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photo_wall_items_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "photos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "photo_wall_items_wall_id_fkey"
+            columns: ["wall_id"]
+            isOneToOne: false
+            referencedRelation: "photo_walls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      photo_walls: {
+        Row: {
+          cover_photo_id: string | null
+          created_at: string | null
+          created_by: string
+          description: string | null
+          id: string
+          is_public: boolean | null
+          name: string
+        }
+        Insert: {
+          cover_photo_id?: string | null
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name: string
+        }
+        Update: {
+          cover_photo_id?: string | null
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_cover_photo"
+            columns: ["cover_photo_id"]
+            isOneToOne: false
+            referencedRelation: "photos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      photos: {
+        Row: {
+          address: string | null
+          compressed_path: string | null
+          converted_formats: Json | null
+          created_at: string | null
+          exif_data: Json | null
+          file_size: number
+          filename: string
+          height: number | null
+          id: string
+          is_heif: boolean | null
+          latitude: number | null
+          location_name: string | null
+          longitude: number | null
+          mime_type: string
+          original_filename: string | null
+          storage_path: string
+          thumbnail_path: string | null
+          updated_at: string | null
+          user_id: string
+          width: number | null
+        }
+        Insert: {
+          address?: string | null
+          compressed_path?: string | null
+          converted_formats?: Json | null
+          created_at?: string | null
+          exif_data?: Json | null
+          file_size: number
+          filename: string
+          height?: number | null
+          id?: string
+          is_heif?: boolean | null
+          latitude?: number | null
+          location_name?: string | null
+          longitude?: number | null
+          mime_type?: string
+          original_filename?: string | null
+          storage_path: string
+          thumbnail_path?: string | null
+          updated_at?: string | null
+          user_id: string
+          width?: number | null
+        }
+        Update: {
+          address?: string | null
+          compressed_path?: string | null
+          converted_formats?: Json | null
+          created_at?: string | null
+          exif_data?: Json | null
+          file_size?: number
+          filename?: string
+          height?: number | null
+          id?: string
+          is_heif?: boolean | null
+          latitude?: number | null
+          location_name?: string | null
+          longitude?: number | null
+          mime_type?: string
+          original_filename?: string | null
+          storage_path?: string
+          thumbnail_path?: string | null
+          updated_at?: string | null
+          user_id?: string
+          width?: number | null
+        }
+        Relationships: []
+      }
       travel_markers: {
         Row: {
           created_at: string
@@ -23,6 +169,7 @@ export type Database = {
           lat: number
           lng: number
           name: string
+          photo_id: string | null
           type: string
           user_id: string
           visit_date: string | null
@@ -35,6 +182,7 @@ export type Database = {
           lat: number
           lng: number
           name: string
+          photo_id?: string | null
           type?: string
           user_id: string
           visit_date?: string | null
@@ -47,11 +195,20 @@ export type Database = {
           lat?: number
           lng?: number
           name?: string
+          photo_id?: string | null
           type?: string
           user_id?: string
           visit_date?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "travel_markers_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "photos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

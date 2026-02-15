@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Upload } from "lucide-react";
 import { toast } from "sonner";
 import PhotoLightbox from "./PhotoLightbox";
+import { generateSizes, validateImageFile } from "@/lib/imageProcessing";
 
 const HEART_GRID = [
   [0,0,1,1,0,1,1,0,0],
@@ -14,65 +15,31 @@ const HEART_GRID = [
   [0,0,0,0,1,0,0,0,0],
 ];
 
-interface Photo {
-  name: string;
-  url: string;
-  thumbnailUrl: string;
+export interface PhotoRecord {
+  id: string;
+  filename: string;
+  original_filename: string | null;
+  storage_path: string;
+  thumbnail_path: string | null;
+  compressed_path: string | null;
+  file_size: number;
+  width: number | null;
+  height: number | null;
+  is_heif: boolean;
+  created_at: string;
 }
 
 const MAX_PHOTOS = 36;
-const MAX_TOTAL_SIZE = 60 * 1024 * 1024; // 60MB
+const MAX_TOTAL_SIZE = 60 * 1024 * 1024;
 const CONCURRENT_LIMIT = 6;
 
-const convertHeicIfNeeded = async (file: File): Promise<File> => {
-  const buffer = await file.slice(0, 12).arrayBuffer();
-  const bytes = new Uint8Array(buffer);
-  const isFTYP = bytes[4] === 0x66 && bytes[5] === 0x74 && bytes[6] === 0x79 && bytes[7] === 0x70;
-  const ext = file.name.toLowerCase();
-  const isHeic = isFTYP || ext.endsWith('.heic') || ext.endsWith('.heif');
+const getPublicUrl = (path: string) =>
+  supabase.storage.from("photos").getPublicUrl(path).data.publicUrl;
 
-  if (!isHeic) return file;
-
-  toast.info(`正在转换 ${file.name} 格式...`);
-  const heic2any = (await import('heic2any')).default;
-  const jpegBlob = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.92 });
-  const blob = Array.isArray(jpegBlob) ? jpegBlob[0] : jpegBlob;
-  return new File([blob], file.name.replace(/\.heic|\.heif/i, '.jpg'), { type: 'image/jpeg' });
-};
-
-const compressImage = (file: File, maxWidth: number = 1200): Promise<Blob> => {
-  return new Promise((resolve) => {
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    const img = new Image();
-    const objectUrl = URL.createObjectURL(file);
-    img.onload = () => {
-      URL.revokeObjectURL(objectUrl);
-      const ratio = Math.min(maxWidth / img.width, maxWidth / img.height, 1);
-      canvas.width = img.width * ratio;
-      canvas.height = img.height * ratio;
-      ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(
-        (blob) => resolve(blob ?? file),
-        "image/jpeg",
-        0.9
-      );
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(objectUrl);
-      console.warn(`Cannot render ${file.name} in browser, using original file`);
-      resolve(file);
-    };
-    img.src = objectUrl;
-  });
-};
-
-const uploadWithRetry = async (fileName: string, blob: Blob, retries = 1): Promise<boolean> => {
+const uploadWithRetry = async (path: string, blob: Blob, retries = 1): Promise<boolean> => {
   for (let attempt = 0; attempt <= retries; attempt++) {
-    const { error } = await supabase.storage.from("photos").upload(fileName, blob, { contentType: "image/jpeg" });
+    const { error } = await supabase.storage.from("photos").upload(path, blob, { contentType: "image/jpeg" });
     if (!error) return true;
-    console.error(`Upload attempt ${attempt + 1} failed for ${fileName}:`, error.message, error);
-    // Don't retry on permission errors
     const msg = error.message?.toLowerCase() ?? "";
     if (msg.includes("403") || msg.includes("401") || msg.includes("not authorized") || msg.includes("permission")) {
       toast.error("登录已过期，请重新登录后再上传");
@@ -83,8 +50,30 @@ const uploadWithRetry = async (fileName: string, blob: Blob, retries = 1): Promi
   return false;
 };
 
+/** Get or create the default "Our Memories" wall for the user */
+const getOrCreateDefaultWall = async (userId: string): Promise<string | null> => {
+  const { data: existing } = await supabase
+    .from("photo_walls")
+    .select("id")
+    .eq("created_by", userId)
+    .eq("name", "Our Memories")
+    .limit(1)
+    .single();
+
+  if (existing) return existing.id;
+
+  const { data: created, error } = await supabase
+    .from("photo_walls")
+    .insert({ name: "Our Memories", created_by: userId, is_public: true })
+    .select("id")
+    .single();
+
+  if (error) { console.error("Failed to create default wall:", error); return null; }
+  return created?.id ?? null;
+};
+
 const PhotoWall = () => {
-  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [photos, setPhotos] = useState<PhotoRecord[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -99,53 +88,17 @@ const PhotoWall = () => {
   }, []);
 
   const fetchPhotos = useCallback(async () => {
-    const { data, error } = await supabase.storage.from("photos").list("", {
-      sortBy: { column: "created_at", order: "desc" },
-    });
+    const { data, error } = await supabase
+      .from("photos")
+      .select("id, filename, original_filename, storage_path, thumbnail_path, compressed_path, file_size, width, height, is_heif, created_at")
+      .order("created_at", { ascending: true })
+      .limit(MAX_PHOTOS);
+
     if (error) { console.error(error); setPhotos([]); return; }
-    if (data) {
-      const photoList = data
-        .filter((f) => f.name !== ".emptyFolderPlaceholder")
-        .slice(0, MAX_PHOTOS)
-        .reverse()
-        .map((f) => {
-          const publicUrl = supabase.storage.from("photos").getPublicUrl(f.name).data.publicUrl;
-          return {
-            name: f.name,
-            url: publicUrl,
-            thumbnailUrl: `${publicUrl}?width=150&resize=cover&quality=75`,
-          };
-        });
-      setPhotos(photoList);
-    }
+    setPhotos((data as PhotoRecord[]) ?? []);
   }, []);
 
   useEffect(() => { fetchPhotos(); }, [fetchPhotos]);
-
-  const validateImageFile = async (file: File): Promise<boolean> => {
-    // Bug 5 fix: add HEIC/HEIF support in MIME and extension checks
-    const allowedMimes = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp", "image/heic", "image/heif"];
-    const allowedExts = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".heic", ".heif"];
-    const ext = file.name.toLowerCase().slice(file.name.lastIndexOf("."));
-    if (!allowedMimes.includes(file.type) && !allowedExts.includes(ext)) {
-      toast.error(`${file.name}: Only image files (JPG, PNG, GIF, WebP) are allowed`);
-      return false;
-    }
-    const buffer = await file.slice(0, 12).arrayBuffer();
-    const bytes = new Uint8Array(buffer);
-    const isJPEG = bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF;
-    const isPNG = bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47;
-    const isGIF = bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46;
-    const isWEBP = bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 && bytes[8] === 0x57;
-    const isBMP = bytes[0] === 0x42 && bytes[1] === 0x4D;
-    // HEIC/HEIF: ftyp box at offset 4
-    const isFTYP = bytes[4] === 0x66 && bytes[5] === 0x74 && bytes[6] === 0x79 && bytes[7] === 0x70;
-    if (!isJPEG && !isPNG && !isGIF && !isWEBP && !isBMP && !isFTYP) {
-      toast.error(`${file.name}: 文件格式不支持。iOS 用户请在「设置 > 相机 > 格式」中选择「兼容性最佳」以使用 JPG 格式拍照。`);
-      return false;
-    }
-    return true;
-  };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -160,27 +113,30 @@ const PhotoWall = () => {
 
     setUploading(true);
     try {
-      // Refresh token before starting long upload to prevent expiration
       await supabase.auth.getSession();
-      // Validate and compress
-      const validFiles: { file: File; compressed: Blob }[] = [];
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) { toast.error("请先登录"); setUploading(false); e.target.value = ""; return; }
+
+      const wallId = await getOrCreateDefaultWall(currentUser.id);
+      if (!wallId) { toast.error("创建相册失败"); setUploading(false); e.target.value = ""; return; }
+
+      // Validate and prepare
+      interface PreparedFile { file: File; original: Blob; medium: Blob; thumbnail: Blob; dimensions: { width: number; height: number }; isHeif: boolean; }
+      const validFiles: PreparedFile[] = [];
       for (const file of fileArray) {
         if (file.size > 6 * 1024 * 1024) { toast.error(`${file.name} 超过 6MB 大小限制`); continue; }
         if (!(await validateImageFile(file))) continue;
         try {
-          const converted = await convertHeicIfNeeded(file);
-          const compressed = await compressImage(converted);
-          validFiles.push({ file, compressed });
+          const sizes = await generateSizes(file);
+          validFiles.push({ file, ...sizes });
         } catch (err) {
           console.error(`Failed to process ${file.name}:`, err);
-          toast.error(`${file.name}: 格式转换失败，请尝试其他格式`);
-          continue;
+          toast.error(`${file.name}: 格式转换失败`);
         }
       }
 
       if (validFiles.length === 0) { setUploading(false); e.target.value = ""; return; }
 
-      // Batch concurrent upload
       let successCount = 0;
       let failCount = 0;
       const total = validFiles.length;
@@ -189,19 +145,58 @@ const PhotoWall = () => {
       for (let i = 0; i < total; i += CONCURRENT_LIMIT) {
         const batch = validFiles.slice(i, i + CONCURRENT_LIMIT);
         const results = await Promise.all(
-          batch.map(async ({ file, compressed }) => {
-            const fileName = `${crypto.randomUUID()}.jpg`;
-            const ok = await uploadWithRetry(fileName, compressed);
-            if (!ok) toast.error(`上传失败: ${file.name}`);
-            return ok;
+          batch.map(async ({ file, original, medium, thumbnail, dimensions, isHeif }) => {
+            const uuid = crypto.randomUUID();
+            const basePath = `${currentUser.id}/${uuid}`;
+            const origPath = `${basePath}.jpg`;
+            const midPath = `${basePath}_mid.jpg`;
+            const thumbPath = `${basePath}_thumb.jpg`;
+
+            // Upload all 3 sizes
+            const [okOrig, okMid, okThumb] = await Promise.all([
+              uploadWithRetry(origPath, original),
+              uploadWithRetry(midPath, medium),
+              uploadWithRetry(thumbPath, thumbnail),
+            ]);
+
+            if (!okOrig) return false;
+
+            // Insert into photos table
+            const { data: photoRow, error: dbErr } = await supabase
+              .from("photos")
+              .insert({
+                filename: `${uuid}.jpg`,
+                original_filename: file.name,
+                file_size: original.size,
+                mime_type: "image/jpeg",
+                width: dimensions.width,
+                height: dimensions.height,
+                storage_path: origPath,
+                thumbnail_path: okThumb ? thumbPath : null,
+                compressed_path: okMid ? midPath : null,
+                is_heif: isHeif,
+                user_id: currentUser.id,
+              })
+              .select("id")
+              .single();
+
+            if (dbErr) { console.error("DB insert failed:", dbErr); return false; }
+
+            // Link to wall
+            if (photoRow) {
+              await supabase.from("photo_wall_items").insert({
+                wall_id: wallId,
+                photo_id: photoRow.id,
+                sort_order: Date.now(),
+              });
+            }
+
+            return true;
           })
         );
         results.forEach(ok => ok ? successCount++ : failCount++);
         setUploadProgress({ current: Math.min(i + batch.length, total), total });
-        // Add delay between batches to avoid rate limiting
-        if (i + batch.length < total) {
-          await new Promise(r => setTimeout(r, 500));
-        }
+        if (i + batch.length < total) await new Promise(r => setTimeout(r, 500));
       }
 
       if (successCount > 0 && failCount === 0) toast.success(`成功上传 ${successCount} 张照片！`);
@@ -213,13 +208,37 @@ const PhotoWall = () => {
     finally { setUploading(false); setUploadProgress(null); e.target.value = ""; }
   };
 
-  const handleDelete = async (name: string) => {
-    const { error } = await supabase.storage.from("photos").remove([name]);
-    if (error) { toast.error("Delete failed"); }
-    else { toast.success("Deleted"); setSelectedIndex(null); fetchPhotos(); }
+  const handleDelete = async (photoId: string) => {
+    // Find the photo record
+    const photo = photos.find(p => p.id === photoId);
+    if (!photo) return;
+
+    // Delete from DB (cascades photo_wall_items)
+    const { error } = await supabase.from("photos").delete().eq("id", photoId);
+    if (error) { toast.error("Delete failed"); return; }
+
+    // Remove files from storage
+    const paths = [photo.storage_path, photo.thumbnail_path, photo.compressed_path].filter(Boolean) as string[];
+    if (paths.length > 0) {
+      await supabase.storage.from("photos").remove(paths);
+    }
+
+    toast.success("Deleted");
+    setSelectedIndex(null);
+    fetchPhotos();
   };
 
   const flatGrid = HEART_GRID.flat();
+
+  // Build lightbox-friendly photo list
+  const lightboxPhotos = photos.map(p => ({
+    id: p.id,
+    name: p.id,
+    url: getPublicUrl(p.storage_path),
+    thumbnailUrl: p.thumbnail_path
+      ? getPublicUrl(p.thumbnail_path)
+      : `${getPublicUrl(p.storage_path)}?width=150&resize=cover&quality=75`,
+  }));
 
   return (
     <section className="relative z-10 py-12 sm:py-16 md:py-20 px-3 sm:px-4">
@@ -252,11 +271,9 @@ const PhotoWall = () => {
           style={{ gridTemplateColumns: "repeat(9, var(--cell-size, 34px))" }}
         >
           {flatGrid.map((filled, i) => {
-            if (!filled) {
-              return <div key={i} className="aspect-square" />;
-            }
+            if (!filled) return <div key={i} className="aspect-square" />;
             const photoIdx = flatGrid.slice(0, i).filter(Boolean).length;
-            const photo = photoIdx < photos.length ? photos[photoIdx] : null;
+            const photo = photoIdx < lightboxPhotos.length ? lightboxPhotos[photoIdx] : null;
             return (
               <div
                 key={i}
@@ -270,14 +287,14 @@ const PhotoWall = () => {
         </div>
       </div>
 
-      {selectedIndex !== null && selectedIndex < photos.length && (
+      {selectedIndex !== null && selectedIndex < lightboxPhotos.length && (
         <PhotoLightbox
-          photos={photos}
+          photos={lightboxPhotos}
           currentIndex={selectedIndex}
           onClose={() => setSelectedIndex(null)}
           onDelete={handleDelete}
           onPrev={() => setSelectedIndex((i) => Math.max(0, (i ?? 1) - 1))}
-          onNext={() => setSelectedIndex((i) => Math.min(photos.length - 1, (i ?? 0) + 1))}
+          onNext={() => setSelectedIndex((i) => Math.min(lightboxPhotos.length - 1, (i ?? 0) + 1))}
           canDelete={!!user}
         />
       )}
