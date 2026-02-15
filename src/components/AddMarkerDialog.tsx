@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { MapPin, X, Upload, Loader2 } from "lucide-react";
+import { MapPin, X, Upload, Loader2, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -15,7 +18,7 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
   const [name, setName] = useState("");
   const [type, setType] = useState<"visited" | "planned">("visited");
   const [description, setDescription] = useState("");
-  const [visitDate, setVisitDate] = useState("");
+  const [visitDate, setVisitDate] = useState<Date | undefined>(undefined);
   const [lat, setLat] = useState(clickedLatLng?.[0]?.toString() ?? "");
   const [lng, setLng] = useState(clickedLatLng?.[1]?.toString() ?? "");
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -46,8 +49,8 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !lat || !lng) {
-      toast.error("Please enter a place name and coordinates");
+    if (!name.trim()) {
+      toast.error("Please enter a place name");
       return;
     }
 
@@ -78,11 +81,11 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
 
       const { error } = await supabase.from("travel_markers" as any).insert({
         name: name.trim(),
-        lat: parseFloat(lat),
-        lng: parseFloat(lng),
+        lat: parseFloat(lat) || 0,
+        lng: parseFloat(lng) || 0,
         type,
         description: description.trim() || null,
-        visit_date: visitDate || null,
+        visit_date: visitDate ? format(visitDate, "yyyy-MM-dd") : null,
         image_url: imageUrl,
         user_id: user.id,
       } as any);
@@ -92,7 +95,7 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
       onAdded();
       onClose();
       // Reset
-      setName(""); setDescription(""); setVisitDate(""); setImageFile(null);
+      setName(""); setDescription(""); setVisitDate(undefined); setImageFile(null);
     } catch (err: any) {
       toast.error(err.message || "Failed to add place");
     } finally {
@@ -149,19 +152,17 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
             <input
               type="number"
               step="any"
-              placeholder="Latitude *"
+              placeholder="Latitude"
               value={lat}
               onChange={(e) => setLat(e.target.value)}
-              required
               className="w-full px-3 py-2 rounded-lg bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-gold/50"
             />
             <input
               type="number"
               step="any"
-              placeholder="Longitude *"
+              placeholder="Longitude"
               value={lng}
               onChange={(e) => setLng(e.target.value)}
-              required
               className="w-full px-3 py-2 rounded-lg bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-gold/50"
             />
           </div>
@@ -175,12 +176,28 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
             className="w-full px-3 py-2 rounded-lg bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-gold/50 resize-none"
           />
 
-          <input
-            type="date"
-            value={visitDate}
-            onChange={(e) => setVisitDate(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-gold/50"
-          />
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className="w-full px-3 py-2 rounded-lg bg-background border border-border text-sm text-left flex items-center gap-2 text-foreground focus:outline-none focus:ring-2 focus:ring-gold/50"
+              >
+                <CalendarIcon size={16} className="text-muted-foreground" />
+                <span className={visitDate ? "text-foreground" : "text-muted-foreground"}>
+                  {visitDate ? format(visitDate, "dd/MM/yyyy") : "Select a date"}
+                </span>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 z-[60]" align="start">
+              <Calendar
+                mode="single"
+                selected={visitDate}
+                onSelect={setVisitDate}
+                initialFocus
+                className="pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
 
           <label className="flex items-center gap-2 px-3 py-2 rounded-lg bg-background border border-border cursor-pointer hover:border-gold/40 transition-colors">
             <Upload size={16} className="text-muted-foreground" />
