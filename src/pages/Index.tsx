@@ -3,6 +3,7 @@ import OrbitingSwatches from "@/components/OrbitingSwatches";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import PhotoWall from "@/components/PhotoWall";
+import TravelMap from "@/components/TravelMap";
 
 const Index = () => {
   return (
@@ -26,6 +27,7 @@ const Index = () => {
       <Header />
       <HeroSection />
       <PhotoWall />
+      <TravelMap />
     </div>
   );
 };
