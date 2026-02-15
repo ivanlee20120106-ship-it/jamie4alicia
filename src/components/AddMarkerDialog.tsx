@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { MapPin, X, Upload, Loader2, CalendarIcon, Search } from "lucide-react";
 import { format } from "date-fns";
@@ -47,11 +47,12 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
     }
   };
 
-  // Sync lat/lng when clickedLatLng changes
-  if (clickedLatLng) {
-    if (lat !== clickedLatLng[0].toFixed(4)) setLat(clickedLatLng[0].toFixed(4));
-    if (lng !== clickedLatLng[1].toFixed(4)) setLng(clickedLatLng[1].toFixed(4));
-  }
+  useEffect(() => {
+    if (clickedLatLng) {
+      setLat(clickedLatLng[0].toFixed(4));
+      setLng(clickedLatLng[1].toFixed(4));
+    }
+  }, [clickedLatLng]);
 
   const compressImage = async (file: File): Promise<Blob> => {
     return new Promise((resolve) => {
@@ -102,10 +103,18 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
         imageUrl = urlData.publicUrl;
       }
 
+      const parsedLat = parseFloat(lat);
+      const parsedLng = parseFloat(lng);
+      if (isNaN(parsedLat) || isNaN(parsedLng)) {
+        toast.error("Please search for coordinates or enter them manually");
+        setSubmitting(false);
+        return;
+      }
+
       const { error } = await supabase.from("travel_markers" as any).insert({
         name: name.trim(),
-        lat: parseFloat(lat) || 0,
-        lng: parseFloat(lng) || 0,
+        lat: parsedLat,
+        lng: parsedLng,
         type,
         description: description.trim() || null,
         visit_date: visitDate ? format(visitDate, "yyyy-MM-dd") : null,
@@ -118,7 +127,7 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
       onAdded();
       onClose();
       // Reset
-      setName(""); setDescription(""); setVisitDate(undefined); setImageFile(null);
+      setName(""); setDescription(""); setVisitDate(undefined); setImageFile(null); setLat(""); setLng("");
     } catch (err: any) {
       toast.error(err.message || "Failed to add place");
     } finally {
