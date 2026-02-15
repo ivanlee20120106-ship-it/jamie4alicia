@@ -63,15 +63,15 @@ const TravelMap = () => {
   }, [user, fetchMarkers]);
 
   const filterButtons: { key: FilterType; label: string }[] = [
-    { key: "all", label: "全部" },
-    { key: "visited", label: "🚩 已去过" },
-    { key: "planned", label: "✈️ 计划中" },
+    { key: "all", label: "All" },
+    { key: "visited", label: "🚩 Visited" },
+    { key: "planned", label: "✈️ Planned" },
   ];
 
   return (
     <section className="relative z-10 px-4 sm:px-6 lg:px-8 pb-16 pt-8">
       <div className="max-w-5xl mx-auto">
-        <h2 className="text-2xl sm:text-3xl font-display italic text-center text-gradient-gold mb-6 tracking-wide">
+        <h2 className="text-2xl sm:text-3xl font-script italic text-center text-gradient-gold glow-gold mb-6 tracking-wide">
           Our Journey Map
         </h2>
 
@@ -99,6 +99,7 @@ const TravelMap = () => {
             zoom={2}
             minZoom={2}
             maxZoom={18}
+            zoomControl={false}
             attributionControl={false}
             className="h-[450px] sm:h-[650px] w-full"
             style={{ background: "#f2f2f2" }}
