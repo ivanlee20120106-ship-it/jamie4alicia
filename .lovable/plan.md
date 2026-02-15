@@ -1,128 +1,37 @@
 
 
-# Pixel-Perfect Replication of Destinero Interactive Map Features
+# 地图样式改造：去掉深色 popup + 替换功能按钮
 
-## Overview
+## 改动概述
 
-Rebuild the TravelMap module to closely replicate Destinero's interactive leaflet map experience, including its marker styles, popup design, map control buttons (search, locate, reset view), click-to-place marker, flyTo animations, and reverse geocoding in popups -- all adapted to fit the existing dark romantic theme.
+1. **去掉深色 popup**：删除 CSS 中的深色 popup 覆盖样式，恢复 Leaflet 默认浅色 popup
+2. **切换为浅色地图瓦片**：从 CARTO dark 切换到标准 OpenStreetMap 瓦片，匹配截图中的浅色地图
+3. **替换右下角按钮**：移除"定位"和"重置视图"按钮，替换为"添加已去过"(🚩) 和"添加计划中"(✈️) 两个快捷打点按钮，点击后弹出城市搜索输入框，搜索到城市后直接添加对应类型的标记
+4. **调整 MapPopup 文字颜色**：由于 popup 改为浅色背景，内部文字需改为深色
 
-## Key Destinero Features to Replicate
+## 需要修改的文件
 
-1. **Marker Icons**: Raw SVG icons (flag for visited, plane for planned) rendered as DivIcon, with hover scale effect, no circular wrapper
-2. **Popup Design**: Centered layout with place name, image (with loading spinner), coordinates in monospace font, and a copy-coords button
-3. **Map Control Buttons**: Bottom-right floating button stack -- Search (with expandable input), Live Location, Reset View
-4. **Click-to-Place**: Clicking the map drops a "clicked location" marker with reverse geocoding via OSM Nominatim
-5. **FlyTo Animations**: Smooth animated flyTo when opening a popup or navigating
-6. **Auto-Open Popup**: Random marker popup opens on load
-7. **Full-viewport map** (adapted to our section-based layout)
+| 文件 | 改动 |
+|------|------|
+| `src/index.css` | 删除 `.leaflet-popup-content-wrapper` 等深色覆盖样式（第 270-292 行） |
+| `src/components/map/MapContent.tsx` | 将 TileLayer URL 从 CARTO dark 改为 OpenStreetMap 标准瓦片 |
+| `src/components/map/MapButtons.tsx` | 移除 Locate 和 Reset 按钮，替换为"添加已去过"和"添加计划中"按钮，点击后展开城市搜索框，搜索 Nominatim 后直接调用 onAddMarker 回调 |
+| `src/components/map/MapPopup.tsx` | 文字颜色改为深色系以适配浅色 popup 背景 |
+| `src/components/TravelMap.tsx` | 新增 handleAddFromMap 回调传给 MapContent，支持从按钮直接添加标记到数据库；移除地图容器的深色背景样式 |
 
-## What Changes vs Current Implementation
+## 按钮交互流程
 
-| Aspect | Current | After |
-|--------|---------|-------|
-| Marker style | Circular badge with border/glow | Raw SVG icon, 1.8rem, hover scale 1.2x |
-| Visited icon color | Gold (hsl 34) | Dark blue (#003380) adapted to gold for our theme |
-| Planned icon color | Blue (hsl 219) | Pink (#ff249c) adapted to our theme |
-| Popup | Tailwind-styled card with image, type badge, description | Centered popup with name, image+spinner, coords+copy button, reverse geocoding for clicked locations |
-| Map buttons | Only filter bar above map + "Add Place" | Bottom-right floating stack: Search, Locate, Reset View |
-| Click behavior | Opens AddMarkerDialog | Drops a temporary "clicked" marker with reverse geocoded info |
-| FlyTo | None | Smooth flyTo on popup open, search, locate, reset |
-| Add Place | Stays as a separate action for authenticated users | Keep existing but improve UX |
+1. 用户点击右下角 🚩 或 ✈️ 按钮
+2. 按钮左侧展开城市搜索输入框（复用现有搜索逻辑）
+3. 用户输入城市名并回车
+4. 通过 Nominatim 搜索获取坐标
+5. 自动将该城市以对应类型（visited/planned）插入数据库
+6. 地图飞到该位置并显示新标记
 
-## Adapted Color Scheme
+## 视觉对照
 
-Since our project uses a dark romantic theme, we adapt Destinero's colors:
-- **Visited marker**: Gold color (`hsl(34, 57%, 70%)`) -- flag icon
-- **Planned marker**: Cornflower blue (`hsl(219, 79%, 66%)`) -- plane icon  
-- **Clicked marker**: Peru/love color (`hsl(28, 57%, 53%)`) -- location pin
-- **Searched marker**: Primary blue
-- **Live location**: Red
-- **Popup background**: Semi-transparent dark card (`rgba(15, 20, 35, 0.95)`) instead of Destinero's light teal
-- **Map buttons**: Gold-tinted dark buttons matching the theme
-- **Popup close button**: Styled to match dark theme
-
-## Component Architecture
-
-```text
-src/components/
-  TravelMap.tsx            -- Main section wrapper (keeps filter bar, title, add-place button)
-  map/
-    MapContent.tsx         -- Inner map content (TileLayer + markers + buttons + click listener)
-    MapMarker.tsx          -- Individual marker with DivIcon + Popup + flyTo
-    MapPopup.tsx           -- Popup content (name, image, coords, copy, reverse geocode)
-    MapButtons.tsx         -- Bottom-right button stack (search, locate, reset)
-    useMapFlyTo.ts         -- flyTo hook
-    useClickedMarker.ts    -- Click listener + reverse geocode logic
-```
-
-## Detailed Implementation
-
-### 1. MapMarker.tsx (replaces MarkerPopup.tsx inline usage)
-- Uses Leaflet DivIcon with raw SVG icon HTML (no circular wrapper)
-- Icon types: `PiFlagPennantFill` style for visited, `BiSolidPlaneAlt` style for planned (using Lucide equivalents: `Flag` and `Plane`)
-- CSS class `custom-div-icon` with 1.8rem font-size, hover scale 1.2x
-- On popup open: `map.flyTo(coords, currentZoom, { duration: 0.6 })`
-- Supports `autoOpen` prop to open popup on mount
-
-### 2. MapPopup.tsx (replaces MarkerPopup.tsx)
-- Centered layout, 15rem width
-- For database markers (visited/planned): Show name + image (with loading spinner) + coords + copy button
-- For dynamic markers (clicked/searched/live): Reverse geocode via OSM Nominatim, show resolved address + country info
-- Coordinates shown in monospace font with copy-to-clipboard button (blue button, turns green on copy)
-- Delete button for authenticated users on database markers
-- Dark theme adaptation: popup wrapper background `rgba(15, 20, 35, 0.95)`, light text
-
-### 3. MapButtons.tsx
-- Positioned absolute bottom-right, z-index 1000
-- Three buttons stacked vertically with 0.75rem gap:
-  1. **Search**: Expandable input that slides left on focus, searches via Nominatim, drops a "searched" marker
-  2. **Locate**: Gets user GPS, drops a "live" marker, flyTo zoom 15
-  3. **Reset View**: flyTo center [35, 105] zoom 4 (our default)
-- Button style: 3rem square, rounded, gold/dark themed, with Lucide icons (Search, Navigation, Maximize)
-- Loading states with spinning icon
-
-### 4. useClickedMarker.ts
-- Listen for map clicks (excluding controls, markers, popups, buttons)
-- Drop a temporary "clicked" marker at click location
-- Popup shows reverse-geocoded address from Nominatim
-
-### 5. useMapFlyTo.ts
-- Simple hook wrapping `map.flyTo()` with promise resolution on `moveend`
-
-### 6. TravelMap.tsx Updates
-- Keep existing filter bar, title, add-place button
-- Pass all marker types to MapContent
-- Combine database markers + dynamic markers (clicked, searched, live)
-- Random auto-open on one static marker
-
-### 7. CSS Changes (src/index.css)
-- Add Destinero-inspired marker CSS (custom-div-icon hover, icon colors)
-- Add popup CSS overrides for dark theme (wrapper bg, tip color, close button style)
-- Add map-buttons CSS (positioned stack, search input expand animation)
-- Add spinner keyframes
-
-## Files to Create/Modify
-
-| File | Action | Description |
-|------|--------|-------------|
-| `src/components/map/MapContent.tsx` | Create | Inner map component with all markers + buttons + click listener |
-| `src/components/map/MapMarker.tsx` | Create | Individual marker with DivIcon + flyTo |
-| `src/components/map/MapPopup.tsx` | Create | Popup content with geocoding + copy coords |
-| `src/components/map/MapButtons.tsx` | Create | Search/locate/reset button stack |
-| `src/components/map/useMapFlyTo.ts` | Create | flyTo promise hook |
-| `src/components/map/useClickedMarker.ts` | Create | Click listener hook |
-| `src/components/TravelMap.tsx` | Rewrite | Use new sub-components |
-| `src/components/MarkerPopup.tsx` | Delete | Replaced by MapPopup |
-| `src/index.css` | Modify | Add marker/popup/buttons CSS |
-| `src/components/AddMarkerDialog.tsx` | Keep | Minor adjustments only |
-
-## Key Behavioral Details
-
-- **Search**: Input expands from right side of search button on click/focus, collapses on blur if empty
-- **FlyTo duration**: 0.6s for popup open, 3s for search/locate/reset
-- **Reverse geocode**: Only for clicked/searched/live markers, shows spinner while loading
-- **Copy coords**: Format `lat, lng` with 5 decimal places, button flashes green with checkmark for 2s
-- **Auto-open**: One random visited/planned marker popup opens automatically on page load
-- **Image in popup**: Shows loading spinner until image loads, then fades in
-- **Marker hover**: Scale 1.2x with 0.2s ease transition
+- 地图瓦片：浅色标准地图（OpenStreetMap）
+- Popup：Leaflet 默认白色背景
+- 标记图标：保持现有旗帜和飞机 SVG 图标不变
+- 右下角按钮：搜索 + 添加已去过 + 添加计划中（3 个按钮）
 
