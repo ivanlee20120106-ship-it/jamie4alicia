@@ -40,7 +40,7 @@ const MapPopup = ({
   return (
     <div className="map-popup-content" style={{ width: "15rem", textAlign: "center" }}>
       {/* Name */}
-      <h4 className="font-display text-sm font-semibold mb-1" style={{ color: "hsl(34, 40%, 92%)" }}>
+      <h4 className="font-display text-sm font-semibold mb-1" style={{ color: "#222" }}>
         {name}
       </h4>
 
@@ -49,7 +49,7 @@ const MapPopup = ({
         <div className="relative w-full h-28 mb-2 rounded overflow-hidden bg-muted/30">
           {!imgLoaded && (
             <div className="absolute inset-0 flex items-center justify-center">
-              <Loader2 size={20} className="animate-spin" style={{ color: "hsl(34, 57%, 70%)" }} />
+              <Loader2 size={20} className="animate-spin" style={{ color: "#999" }} />
             </div>
           )}
           <img
@@ -64,7 +64,7 @@ const MapPopup = ({
 
       {/* Reverse geocoded address for dynamic markers */}
       {isDynamic && (
-        <div className="text-xs mb-1.5" style={{ color: "hsl(34, 20%, 62%)" }}>
+        <div className="text-xs mb-1.5" style={{ color: "#666" }}>
           {addressLoading ? (
             <div className="flex items-center justify-center gap-1">
               <Loader2 size={12} className="animate-spin" />
@@ -80,7 +80,7 @@ const MapPopup = ({
       <div className="flex items-center justify-center gap-1.5 mt-1">
         <code
           className="text-[11px] tracking-wide"
-          style={{ fontFamily: "monospace", color: "hsl(34, 20%, 62%)" }}
+          style={{ fontFamily: "monospace", color: "#888" }}
         >
           {coordsText}
         </code>
