@@ -1,12 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
-import L from "leaflet";
-import { renderToStaticMarkup } from "react-dom/server";
-import { MapPin, Plane, Plus } from "lucide-react";
+import { MapContainer } from "react-leaflet";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import MarkerPopup from "./MarkerPopup";
+import { Plus } from "lucide-react";
+import MapContent from "./map/MapContent";
 import AddMarkerDialog from "./AddMarkerDialog";
 
 interface TravelMarker {
@@ -20,31 +18,6 @@ interface TravelMarker {
   image_url: string | null;
   user_id: string;
 }
-
-// Custom icons
-const createIcon = (type: "visited" | "planned") => {
-  const color = type === "visited" ? "hsl(34, 57%, 70%)" : "hsl(219, 79%, 66%)";
-  const IconComponent = type === "visited" ? MapPin : Plane;
-  const html = renderToStaticMarkup(
-    <div style={{
-      width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center",
-      borderRadius: "50%", background: `${color}22`, border: `2px solid ${color}`,
-      boxShadow: `0 0 12px ${color}44`,
-    }}>
-      <IconComponent size={16} color={color} fill={`${color}66`} />
-    </div>
-  );
-  return L.divIcon({ html, className: "", iconSize: [32, 32], iconAnchor: [16, 16] });
-};
-
-const visitedIcon = createIcon("visited");
-const plannedIcon = createIcon("planned");
-
-// Map click handler component
-const MapClickHandler = ({ onMapClick }: { onMapClick: (lat: number, lng: number) => void }) => {
-  useMapEvents({ click: (e) => onMapClick(e.latlng.lat, e.latlng.lng) });
-  return null;
-};
 
 type FilterType = "all" | "visited" | "planned";
 
@@ -68,11 +41,11 @@ const TravelMap = () => {
     [markers, filter]
   );
 
-  const handleMapClick = useCallback((lat: number, lng: number) => {
-    if (!user) return;
-    setClickedLatLng([lat, lng]);
-    setDialogOpen(true);
-  }, [user]);
+  // Pick a random marker to auto-open on load
+  const autoOpenId = useMemo(() => {
+    if (markers.length === 0) return undefined;
+    return markers[Math.floor(Math.random() * markers.length)].id;
+  }, [markers]);
 
   const handleDelete = useCallback(async (id: string) => {
     const { error } = await supabase.from("travel_markers" as any).delete().eq("id", id);
@@ -90,7 +63,6 @@ const TravelMap = () => {
   return (
     <section className="relative z-10 px-4 sm:px-6 lg:px-8 pb-16 pt-8">
       <div className="max-w-5xl mx-auto">
-        {/* Title */}
         <h2 className="text-2xl sm:text-3xl font-display italic text-center text-gradient-gold mb-6 tracking-wide">
           Our Journey Map
         </h2>
@@ -112,8 +84,8 @@ const TravelMap = () => {
           ))}
         </div>
 
-        {/* Map container */}
-        <div className="rounded-xl overflow-hidden border border-gold/20 shadow-[0_4px_24px_hsl(var(--gold)/0.08)] backdrop-blur-md">
+        {/* Map */}
+        <div className="rounded-xl overflow-hidden border border-gold/20 shadow-[0_4px_24px_hsl(var(--gold)/0.08)] backdrop-blur-md relative">
           <MapContainer
             center={[35, 105]}
             zoom={4}
@@ -122,26 +94,12 @@ const TravelMap = () => {
             className="h-[350px] sm:h-[500px] w-full"
             style={{ background: "hsl(219, 50%, 10%)" }}
           >
-            <TileLayer
-              attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+            <MapContent
+              markers={filteredMarkers}
+              canDelete={!!user}
+              onDelete={handleDelete}
+              autoOpenId={autoOpenId}
             />
-            {user && <MapClickHandler onMapClick={handleMapClick} />}
-            {filteredMarkers.map((m) => (
-              <Marker
-                key={m.id}
-                position={[m.lat, m.lng]}
-                icon={m.type === "visited" ? visitedIcon : plannedIcon}
-              >
-                <Popup>
-                  <MarkerPopup
-                    marker={m}
-                    canDelete={!!user}
-                    onDelete={handleDelete}
-                  />
-                </Popup>
-              </Marker>
-            ))}
           </MapContainer>
         </div>
 
