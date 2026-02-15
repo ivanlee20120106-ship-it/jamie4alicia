@@ -1,9 +1,37 @@
+import { lazy, Suspense, useRef, useState, useEffect } from "react";
 import FloatingHearts from "@/components/FloatingHearts";
 import OrbitingSwatches from "@/components/OrbitingSwatches";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import PhotoWall from "@/components/PhotoWall";
-import TravelMap from "@/components/TravelMap";
+
+const TravelMap = lazy(() => import("@/components/TravelMap"));
+
+const LazyTravelMap = () => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect(); } },
+      { rootMargin: "200px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref}>
+      {visible && (
+        <Suspense fallback={<div className="h-[55vh] min-h-[350px] sm:h-[500px] lg:h-[650px]" />}>
+          <TravelMap />
+        </Suspense>
+      )}
+    </div>
+  );
+};
 
 const Index = () => {
   return (
@@ -27,7 +55,7 @@ const Index = () => {
       <Header />
       <HeroSection />
       <PhotoWall />
-      <TravelMap />
+      <LazyTravelMap />
     </div>
   );
 };

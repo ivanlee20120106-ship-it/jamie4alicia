@@ -59,6 +59,9 @@ const MapContent = ({ markers, canDelete, onDelete, onAddMarker, autoOpenId }: M
     <>
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        updateWhenZooming={false}
+        updateWhenIdle={true}
+        keepBuffer={2}
       />
 
       {/* Database markers */}
