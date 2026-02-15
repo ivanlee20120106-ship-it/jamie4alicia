@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { MapPin, X, Upload, Loader2, CalendarIcon } from "lucide-react";
+import { MapPin, X, Upload, Loader2, CalendarIcon, Search } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -23,6 +23,29 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
   const [lng, setLng] = useState(clickedLatLng?.[1]?.toString() ?? "");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [geocoding, setGeocoding] = useState(false);
+
+  const geocodeName = async () => {
+    if (!name.trim()) return;
+    setGeocoding(true);
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(name.trim())}&format=json&limit=1&accept-language=en`
+      );
+      const data = await res.json();
+      if (data.length > 0) {
+        setLat(parseFloat(data[0].lat).toFixed(4));
+        setLng(parseFloat(data[0].lon).toFixed(4));
+        toast.success("Coordinates found!");
+      } else {
+        toast.error("Location not found");
+      }
+    } catch {
+      toast.error("Geocoding failed");
+    } finally {
+      setGeocoding(false);
+    }
+  };
 
   // Sync lat/lng when clickedLatLng changes
   if (clickedLatLng) {
@@ -120,14 +143,25 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
-          <input
-            type="text"
-            placeholder="Place name *"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            className="w-full px-3 py-2 rounded-lg bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-gold/50"
-          />
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="Place name *"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); geocodeName(); } }}
+              required
+              className="flex-1 px-3 py-2 rounded-lg bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-gold/50"
+            />
+            <button
+              type="button"
+              onClick={geocodeName}
+              disabled={geocoding || !name.trim()}
+              className="px-3 py-2 rounded-lg bg-background border border-border text-muted-foreground hover:text-gold hover:border-gold/40 transition-colors disabled:opacity-50"
+            >
+              {geocoding ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
+            </button>
+          </div>
 
           <div className="flex gap-2">
             {(["visited", "planned"] as const).map((t) => (
