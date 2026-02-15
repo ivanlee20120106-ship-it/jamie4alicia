@@ -1,18 +1,34 @@
 
 
-# 去掉 Leaflet/OpenStreetMap 归属标签
+# 地图模块调整
 
-## 问题
+## 改动内容
 
-虽然已经在 `MapContainer` 上设置了 `attributionControl={false}`，但 `TileLayer` 组件本身仍然通过 `attribution` 属性传递了归属文本，这会重新创建归属标签。
+### 1. 隐藏 Leaflet 默认缩放按钮
+在 MapContainer 上添加 `zoomControl={false}`，去掉左上角的 +/- 缩放按钮。
 
-## 解决方案
+### 2. 筛选按钮文字改为英文
+- "全部" -> "All"
+- "🚩 已去过" -> "🚩 Visited"
+- "✈️ 计划中" -> "✈️ Planned"
 
-在 `src/components/map/MapContent.tsx` 的 `TileLayer` 中移除 `attribution` 属性，这样归属文字就不会再显示。
+### 3. 右下角搜索输入框 placeholder 改为英文
+- "搜索地点..." -> "Search place..."
+- "输入已去过的城市..." -> "Visited city..."
+- "输入计划中的城市..." -> "Planned city..."
+
+### 4. 标题样式统一
+将 "Our Journey Map" 的样式调整为与全站一致的排版风格：
+- 使用 `font-script`（Dancing Script）作为标题字体，与 Header 中的 "Our Love Journey" 风格统一
+- 保持 italic、text-gradient-gold、glow-gold 等现有样式
+
+### 5. 筛选按钮字体统一
+筛选按钮已使用 `font-body`（Cormorant Garamond），保持不变，与全站副标题/标签的字体层次一致。
 
 ## 修改文件
 
 | 文件 | 改动 |
 |------|------|
-| `src/components/map/MapContent.tsx` | 删除 TileLayer 的 `attribution` 属性（第 61 行） |
+| `src/components/TravelMap.tsx` | MapContainer 添加 `zoomControl={false}`；筛选按钮文字改英文；标题字体改为 `font-script` |
+| `src/components/map/MapButtons.tsx` | placeholder 文字改为英文 |
 
