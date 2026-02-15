@@ -1,48 +1,126 @@
 
 
-# 安卓移动端照片墙显示 Bug 修复
+# 添加周年纪念与情人节计数器
 
-## 问题分析
+## 布局设计
 
-从截图可以看到，照片墙的心形网格在安卓端出现列对齐错位问题。根本原因是 CSS Grid 使用了 `gridTemplateColumns: "repeat(9, 1fr)"`，`1fr` 会将可用空间等分为 9 列，但每列实际宽度大于固定的 34px 单元格宽度，导致单元格在列内左对齐，造成行与行之间不对齐。
+桌面端（md 及以上）：三栏水平排列
 
-此外，没有照片的心形格子显示了 `bg-muted/40` 背景色，在底部形成了空的占位方块，视觉效果不佳。
+```text
++---------------------+-------------------------+---------------------+
+| Xth Anniversary     | We have been together   | Xth Valentine's Day |
+| We've celebrated    |     1247 days            | We've celebrated    |
+| our Xth anniversary | Every day is the best   | our Xth Valentine's |
++---------------------+-------------------------+---------------------+
+```
 
-## 解决方案
+移动端（md 以下）：垂直堆叠
 
-**文件：`src/components/PhotoWall.tsx`**
+```text
++-------------------------+
+| Xth Anniversary         |
++-------------------------+
+| We have been together   |
+|     1247 days            |
+| Every day is the best   |
++-------------------------+
+| Xth Valentine's Day     |
++-------------------------+
+```
 
-1. **修复网格对齐**：将 `gridTemplateColumns` 从 `repeat(9, 1fr)` 改为使用固定尺寸匹配单元格宽度，并添加 `place-items: center`。使用响应式内联样式：
-   - 移动端：`repeat(9, 34px)`
-   - 平板 (sm)：`repeat(9, 55px)`
-   - 桌面 (md)：`repeat(9, 70px)`
+## 动态计算逻辑
 
-2. **优化空格子显示**：将没有照片的心形格子的 `bg-muted/40` 改为更透明的 `bg-muted/20`，减少视觉干扰
+**周年纪念**：第 1 个周年纪念 = 2023.09.18，计算公式为 `currentYear - 2022`，若当前日期还没到 9 月 18 日则减 1。
 
-3. **移除单元格固定宽高类**：改用 `aspect-ratio: 1` + `w-full` 让单元格自动适应列宽，避免尺寸冲突
+**情人节**：第 1 个情人节 = 2023.02.14（在一起后的首个），计算公式为 `currentYear - 2022`，若当前日期还没到 2 月 14 日则减 1。
+
+两个计数均基于 UTC+8 时区，与天数计算保持一致。
 
 ## 技术细节
 
-核心改动 -- 将 inline style 的 grid 定义改为使用 CSS 变量或直接固定像素值：
+**文件：`src/components/HeroSection.tsx`**
+
+1. 新增两个计算函数：
 
 ```text
-// 替换当前的 grid 容器
-<div
-  className="grid gap-1.5 sm:gap-2 md:gap-2.5 justify-center"
-  style={{
-    gridTemplateColumns: "repeat(9, var(--cell-size))"
-  }}
->
+const getAnniversaryCount = (): number => {
+  // 基于 UTC+8 的当前日期
+  const now = new Date();
+  const utc8 = new Date(now.getTime() + 8 * 3600000);
+  const year = utc8.getUTCFullYear();
+  const month = utc8.getUTCMonth(); // 0-indexed
+  const day = utc8.getUTCDate();
+  // 还没到今年的 9.18 则减 1
+  let count = year - 2022;
+  if (month < 8 || (month === 8 && day < 18)) count--;
+  return Math.max(count, 0);
+};
+
+const getValentineCount = (): number => {
+  const now = new Date();
+  const utc8 = new Date(now.getTime() + 8 * 3600000);
+  const year = utc8.getUTCFullYear();
+  const month = utc8.getUTCMonth();
+  const day = utc8.getUTCDate();
+  let count = year - 2022;
+  if (month < 1 || (month === 1 && day < 14)) count--;
+  return Math.max(count, 0);
+};
 ```
 
-同时用 CSS 自定义属性 `--cell-size` 通过 Tailwind 的响应式断点控制：
-- 默认 34px、sm 断点 55px、md 断点 70px
+2. 在 `useEffect` 的定时刷新中同时更新这两个值。
 
-或者更简单地，直接用一个 wrapper div 加上响应式 CSS 类来控制 `--cell-size`。
+3. 将原来的 Day counter 区域（第 62-71 行）重构为三栏响应式布局：
 
-空格子和无照片格子的背景透明度调低，减少安卓端的视觉噪音。
+```text
+<div className="mt-8 sm:mt-12 animate-fade-in-up flex flex-col md:flex-row items-center md:items-stretch justify-center gap-6 md:gap-10 w-full max-w-5xl">
+  {/* 左侧 - 周年纪念 */}
+  <MilestoneBadge
+    ordinal={anniversaries}
+    title="Anniversary"
+    subtitle="We've celebrated our"
+    suffix="anniversary"
+  />
+
+  {/* 中间 - 天数（保持原样式） */}
+  <div className="text-center">
+    <p className="...">We have been together for</p>
+    <div className="...">
+      <span className="...">{days}</span>
+      <span className="...">days</span>
+    </div>
+    <p className="...">Every day is the best day</p>
+  </div>
+
+  {/* 右侧 - 情人节 */}
+  <MilestoneBadge
+    ordinal={valentines}
+    title="Valentine's Day"
+    subtitle="We've celebrated our"
+    suffix="Valentine's Day"
+  />
+</div>
+```
+
+4. 新增 `MilestoneBadge` 组件，复用 `DateBadge` 的视觉风格（圆角边框、半透明背景、金色文字），显示序数词（1st, 2nd, 3rd, 4th...）。
+
+序数词工具函数：
+```text
+const getOrdinal = (n: number): string => {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+};
+// 3 -> "3rd", 4 -> "4th"
+```
+
+## 当前预期值（2026.02.15）
+
+- 周年纪念：第 3 个（3rd Anniversary）
+- 情人节：第 4 个（4th Valentine's Day）
+- 天数：1247 天
 
 | 文件 | 改动 |
 |------|------|
-| `src/components/PhotoWall.tsx` | 修复 grid 列定义为固定像素值、优化空格子样式、提升响应式适配 |
+| `src/components/HeroSection.tsx` | 新增周年/情人节计算函数、MilestoneBadge 组件、三栏响应式布局 |
 
