@@ -71,7 +71,7 @@ const TravelMap = () => {
   return (
     <section className="relative z-10 px-4 sm:px-6 lg:px-8 pb-16 pt-8">
       <div className="max-w-5xl mx-auto">
-        <h2 className="text-2xl sm:text-3xl font-script italic text-center text-gradient-gold glow-gold mb-6 tracking-wide">
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-script italic text-center text-gradient-love glow-gold mb-6 tracking-wide">
           Our Journey Map
         </h2>
 
