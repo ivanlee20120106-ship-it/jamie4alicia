@@ -95,11 +95,12 @@ const TravelMap = () => {
         {/* Map */}
         <div className="rounded-xl overflow-hidden border border-gold/20 shadow-[0_4px_24px_hsl(var(--gold)/0.08)] backdrop-blur-md relative">
           <MapContainer
-            center={[35, 105]}
-            zoom={4}
+            center={[20, 105]}
+            zoom={2}
             minZoom={2}
             maxZoom={18}
-            className="h-[350px] sm:h-[500px] w-full"
+            attributionControl={false}
+            className="h-[450px] sm:h-[650px] w-full"
             style={{ background: "#f2f2f2" }}
           >
             <MapContent
