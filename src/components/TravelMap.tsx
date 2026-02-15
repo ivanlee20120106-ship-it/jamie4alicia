@@ -54,6 +54,14 @@ const TravelMap = () => {
     fetchMarkers();
   }, [fetchMarkers]);
 
+  const handleAddFromMap = useCallback(async (lat: number, lng: number, name: string, type: "visited" | "planned") => {
+    if (!user) { toast.error("请先登录"); return; }
+    const { error } = await supabase.from("travel_markers" as any).insert({ lat, lng, name, type, user_id: user.id });
+    if (error) { toast.error("添加失败"); return; }
+    toast.success(`已添加: ${name}`);
+    fetchMarkers();
+  }, [user, fetchMarkers]);
+
   const filterButtons: { key: FilterType; label: string }[] = [
     { key: "all", label: "全部" },
     { key: "visited", label: "🚩 已去过" },
@@ -92,12 +100,13 @@ const TravelMap = () => {
             minZoom={2}
             maxZoom={18}
             className="h-[350px] sm:h-[500px] w-full"
-            style={{ background: "hsl(219, 50%, 10%)" }}
+            style={{ background: "#f2f2f2" }}
           >
             <MapContent
               markers={filteredMarkers}
               canDelete={!!user}
               onDelete={handleDelete}
+              onAddMarker={handleAddFromMap}
               autoOpenId={autoOpenId}
             />
           </MapContainer>

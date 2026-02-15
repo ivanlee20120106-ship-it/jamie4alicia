@@ -22,6 +22,7 @@ interface MapContentProps {
   markers: TravelMarker[];
   canDelete: boolean;
   onDelete: (id: string) => void;
+  onAddMarker?: (lat: number, lng: number, name: string, type: "visited" | "planned") => void;
   autoOpenId?: string;
 }
 
@@ -42,7 +43,7 @@ interface DynamicMarker {
   address?: string;
 }
 
-const MapContent = ({ markers, canDelete, onDelete, autoOpenId }: MapContentProps) => {
+const MapContent = ({ markers, canDelete, onDelete, onAddMarker, autoOpenId }: MapContentProps) => {
   const { clicked, clearClicked } = useClickedMarker();
   const [dynamicMarkers, setDynamicMarkers] = useState<DynamicMarker[]>([]);
 
@@ -50,15 +51,15 @@ const MapContent = ({ markers, canDelete, onDelete, autoOpenId }: MapContentProp
     setDynamicMarkers((prev) => [...prev.filter((m) => m.type !== "searched"), { lat, lng, name, type: "searched", address: name }]);
   }, []);
 
-  const handleLocate = useCallback((lat: number, lng: number) => {
-    setDynamicMarkers((prev) => [...prev.filter((m) => m.type !== "live"), { lat, lng, name: "我的位置", type: "live" }]);
+  const handleLocate = useCallback((_lat: number, _lng: number) => {
+    // no-op, locate removed
   }, []);
 
   return (
     <>
       <TileLayer
-        attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
       {/* Database markers */}
@@ -113,7 +114,7 @@ const MapContent = ({ markers, canDelete, onDelete, autoOpenId }: MapContentProp
         </Marker>
       ))}
 
-      <MapButtons onSearchResult={handleSearchResult} onLocate={handleLocate} />
+      <MapButtons onSearchResult={handleSearchResult} onAddMarker={onAddMarker} />
     </>
   );
 };
