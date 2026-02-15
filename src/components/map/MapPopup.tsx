@@ -69,7 +69,7 @@ const MapPopup = ({
           {addressLoading ? (
             <div className="flex items-center justify-center gap-1">
               <Loader2 size={12} className="animate-spin" />
-              <span className="font-body">解析地址中...</span>
+              <span className="font-body">Loading address...</span>
             </div>
           ) : (
             <span className="font-body">{address}</span>
@@ -92,7 +92,7 @@ const MapPopup = ({
             background: copied ? "hsl(142, 70%, 40%)" : "hsl(219, 79%, 66%)",
             color: "#fff",
           }}
-          title="复制坐标"
+          title="Copy coordinates"
         >
           {copied ? <Check size={11} /> : <Copy size={11} />}
         </button>
@@ -106,7 +106,7 @@ const MapPopup = ({
           style={{ color: "hsl(0, 84%, 60%)" }}
         >
           <Trash2 size={12} />
-          <span className="font-body">删除</span>
+          <span className="font-body">Delete</span>
         </button>
       )}
     </div>
