@@ -1,31 +1,54 @@
 
 
-# Localize "Add Marker" Dialog to English
+# Optimize Add Marker Dialog: Remove Required Coordinates + Date Picker UI
 
-## Overview
-Translate all Chinese text in the AddMarkerDialog component to polished, product-marketing-style English copy.
+## Changes
 
-## Text Changes
+### 1. Remove mandatory lat/lng validation
+- Remove `!lat || !lng` from the validation check on line 49 -- only `name` remains required
+- Remove `required` attribute from both lat/lng inputs (lines 155, 164)
+- Change placeholder text from "Latitude *" / "Longitude *" to "Latitude" / "Longitude"
+- Update error message to "Please enter a place name"
+- Keep lat/lng inputs visible (users can still enter manually or tap map), but submission allowed without them
+- In the insert logic, use `parseFloat(lat) || 0` as fallback when coordinates are empty
 
-| Current (Chinese) | New (English) |
-|---|---|
-| 添加地点 | Add a Place |
-| 地点名称 * | Place name * |
-| 🚩 已去过 | 🚩 Visited |
-| ✈️ 计划中 | ✈️ Planned |
-| 纬度 * | Latitude * |
-| 经度 * | Longitude * |
-| 也可以在地图上点击选择位置 | You can also tap on the map to pick a location |
-| 描述（可选） | Description (optional) |
-| 上传图片（≤10MB） | Upload a photo (max 10MB) |
-| 添加地点 (button) | Add Place |
-| 添加中... | Adding... |
-| 请填写地点名称和坐标 | Please enter a place name and coordinates |
-| 请先登录 | Please sign in first |
-| 图片不能超过 10MB | Image must be under 10MB |
-| 地点已添加！ | Place added successfully! |
-| 添加失败 | Failed to add place |
+### 2. Replace native date input with Popover + Calendar date picker
+- Replace `<input type="date">` (line 178-183) with a Popover-based date picker using the existing `Calendar` and `Popover` components
+- Change `visitDate` state from `string` to `Date | undefined`
+- Display selected date formatted as `DD/MM/YYYY` using `date-fns` `format(date, "dd/MM/yyyy")`
+- Style the trigger button to match the existing form field aesthetic (bg-background, border-border, rounded-lg)
+- Add `pointer-events-auto` to Calendar wrapper per project conventions
+- In the insert logic, format the Date to `yyyy-MM-dd` string for database storage
 
-## File Modified
-- `src/components/AddMarkerDialog.tsx` -- all user-facing strings translated to English
+## Files Modified
+- `src/components/AddMarkerDialog.tsx` -- both changes in this single file
 
+## Technical Details
+
+New imports needed:
+```typescript
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+```
+
+Date picker UI:
+```typescript
+<Popover>
+  <PopoverTrigger asChild>
+    <button type="button" className="w-full px-3 py-2 rounded-lg bg-background border border-border text-sm text-left ...">
+      <CalendarIcon size={16} />
+      {visitDate ? format(visitDate, "dd/MM/yyyy") : "Select a date"}
+    </button>
+  </PopoverTrigger>
+  <PopoverContent className="w-auto p-0" align="start">
+    <Calendar mode="single" selected={visitDate} onSelect={setVisitDate} className="pointer-events-auto" />
+  </PopoverContent>
+</Popover>
+```
+
+Database insert change for visit_date:
+```typescript
+visit_date: visitDate ? format(visitDate, "yyyy-MM-dd") : null
+```
