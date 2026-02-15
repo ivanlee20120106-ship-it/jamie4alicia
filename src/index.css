@@ -255,3 +255,38 @@
   background: hsl(var(--muted));
   border-radius: 3px;
 }
+
+/* ===== Destinero-style Map Styles ===== */
+
+/* Marker hover effect */
+.custom-div-icon {
+  transition: transform 0.2s ease;
+  cursor: pointer;
+}
+.custom-div-icon:hover {
+  transform: scale(1.2);
+}
+
+/* Dark themed popup */
+.leaflet-popup-content-wrapper {
+  background: rgba(15, 20, 35, 0.95) !important;
+  color: hsl(34, 40%, 92%) !important;
+  border-radius: 0.75rem !important;
+  border: 1px solid hsl(34, 57%, 70%, 0.2) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4) !important;
+}
+.leaflet-popup-tip {
+  background: rgba(15, 20, 35, 0.95) !important;
+}
+.leaflet-popup-close-button {
+  color: hsl(34, 20%, 62%) !important;
+  font-size: 18px !important;
+  top: 6px !important;
+  right: 8px !important;
+}
+.leaflet-popup-close-button:hover {
+  color: hsl(34, 57%, 70%) !important;
+}
+.leaflet-popup-content {
+  margin: 12px 14px !important;
+}
