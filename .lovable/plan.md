@@ -1,72 +1,84 @@
 
 
-# 浪漫艺术风格字体排版优化
+# 卡片色块视觉设计优化
 
-## 设计理念
+## 问题分析
 
-当前页面已使用三种字体（Dancing Script、Playfair Display、Cormorant Garamond），但使用不够系统化。优化方案将建立清晰的字体层次体系，让每种字体承担明确的角色：
+从截图可以看到，红框标注的 5 个卡片元素（2 个生日徽章、1 个纪念日徽章、2 个里程碑卡片）视觉效果过于平淡：
+- 纯色深蓝背景 + 单像素边框，缺乏层次感
+- 没有渐变、光晕等装饰效果，与页面的浪漫艺术风格不协调
+- 所有卡片样式雷同，没有主次区分
 
-- **Dancing Script（草书）**：仅用于核心情感标题（名字、网站标题）
-- **Playfair Display（衬线展示）**：用于日期数字、里程碑标题等需要庄重感的元素
-- **Cormorant Garamond（优雅正文）**：用于所有描述性文字、标签、副标题
+## 设计方案
 
-## 文字元素逐一调整清单
+### 1. DateBadge（生日 + 纪念日）
 
-### Header（`Header.tsx`）
-| 元素 | 当前 | 调整 |
-|------|------|------|
-| "Our Love Journey" | `font-script text-2xl sm:text-3xl` | 加 `italic tracking-wide`，增加字间距和斜体，更优雅 |
+**普通尺寸（生日）**：
+- 边框改为金色渐变边框（`border-gold/30`），增加 1px 金色微光
+- 背景加上从左上到右下的微妙渐变（`bg-gradient-to-br from-card/60 to-card/40`）
+- 添加内部光晕效果（`shadow-[inset_0_1px_0_0_hsl(var(--gold)/0.1)]`）
+- 添加底部柔和金色投影（`shadow-lg shadow-gold/5`）
 
-### HeroSection（`HeroSection.tsx`）
-| 元素 | 当前 | 调整 |
-|------|------|------|
-| "Jamie & Alicia" | `font-script text-4xl...text-8xl` | 加 `italic`，保持现有大小 |
-| DateBadge 日期文字 | `font-display` | 加 `tracking-widest` 和 `font-light`，数字加宽字距更精致 |
-| DateBadge 标签（His/Her Birthday, Anniversary） | 无字体类 | 加 `font-body italic tracking-wide`，使用 Cormorant Garamond 斜体 |
-| "We have been together for" | 无字体类 | 加 `font-body italic tracking-wide`，Cormorant Garamond 斜体 |
-| 天数数字 | `font-display font-bold` | 加 `tracking-tight`，数字紧凑更有冲击力 |
-| "days" | 无字体类 | 加 `font-body italic`，配合正文字体 |
-| "Every day is the best day" | 无字体类 | 改用 `font-script text-xl sm:text-2xl text-gold/80`，用草书体突出浪漫感 |
-| MilestoneBadge 标题 | `font-display` | 保持，加 `tracking-wide` |
-| MilestoneBadge 副标题 | 无字体类 | 加 `font-body italic` |
+**大尺寸（纪念日）**：
+- 在普通基础上增强效果：更宽的内边距、更明显的金色边框光晕
+- 添加微妙的外发光（`shadow-[0_0_20px_hsl(var(--gold)/0.08)]`）
 
-### PhotoWall（`PhotoWall.tsx`）
-| 元素 | 当前 | 调整 |
-|------|------|------|
-| "Our Photo Wall" | `font-display` | 加 `italic tracking-wide` |
-| "Capturing every beautiful moment together" | 无字体类 | 加 `font-body italic tracking-wide` |
-| "Upload Photos" | 无字体类 | 加 `font-body` |
+### 2. MilestoneBadge（周年 + 情人节）
 
-### AuthDialog（`AuthDialog.tsx`）
-| 元素 | 当前 | 调整 |
-|------|------|------|
-| "Sign In" / "Create Account" | `font-display` | 加 `italic` |
-| 按钮 "Sign In" 文字 | 无字体类 | 加 `font-body` |
-| 切换提示文字 | 无字体类 | 加 `font-body italic` |
+- 渐变背景：`bg-gradient-to-br from-card/70 via-card/50 to-muted/30`
+- 金色渐变上边框装饰线（伪元素或顶部 border-t）
+- 更柔和的圆角（`rounded-xl`）
+- 悬停时微妙放大 + 光晕增强（`hover:scale-[1.02] transition-transform`）
+- 底部投影增加深度感
 
-### PhotoLightbox（`PhotoLightbox.tsx`）
-| 元素 | 当前 | 调整 |
-|------|------|------|
-| 照片计数器 "01 / 36" | 无字体类 | 加 `font-display tracking-widest` |
-| "Close" / "Delete" 按钮 | 无字体类 | 加 `font-body` |
+### 3. 统一提升
+
+- 所有卡片的 `backdrop-blur` 从 `sm` 提升到 `md`，增强毛玻璃质感
+- 边框从 `border-border/50` 改为 `border-gold/20`，与金色主题统一
+- 添加过渡动画 `transition-all duration-300`
 
 ## 技术细节
 
-所有改动都是 className 的增加/修改，不涉及任何结构变更。主要添加的 Tailwind 类：
+**文件：`src/components/HeroSection.tsx`**
 
-- `italic` — CSS font-style: italic
-- `tracking-wide` — letter-spacing: 0.025em
-- `tracking-widest` — letter-spacing: 0.1em
-- `tracking-tight` — letter-spacing: -0.025em
-- `font-light` — font-weight: 300
-- `font-body` — Cormorant Garamond（已在 index.css 定义）
-- `font-script` — Dancing Script（已在 index.css 定义）
+DateBadge 组件改动：
+```text
+// 当前
+<div className="text-center px-4 py-2 rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm">
+
+// 优化后（普通）
+<div className="text-center px-5 py-3 rounded-xl
+  border border-gold/20
+  bg-gradient-to-br from-card/60 via-card/50 to-muted/30
+  backdrop-blur-md
+  shadow-[0_2px_16px_hsl(var(--gold)/0.06),inset_0_1px_0_hsl(var(--gold)/0.1)]
+  transition-all duration-300 hover:border-gold/30 hover:shadow-[0_4px_24px_hsl(var(--gold)/0.1)]">
+
+// 优化后（大 - 纪念日）
+<div className="text-center px-10 py-5 rounded-xl
+  border border-gold/25
+  bg-gradient-to-br from-card/70 via-card/50 to-muted/30
+  backdrop-blur-md
+  shadow-[0_4px_24px_hsl(var(--gold)/0.08),inset_0_1px_0_hsl(var(--gold)/0.15)]
+  transition-all duration-300 hover:border-gold/35 hover:shadow-[0_6px_32px_hsl(var(--gold)/0.12)]">
+```
+
+MilestoneBadge 组件改动：
+```text
+// 当前
+<div className="text-center px-6 py-4 rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm flex flex-col justify-center min-w-[180px]">
+
+// 优化后
+<div className="text-center px-8 py-6 rounded-xl
+  border border-gold/20 border-t-gold/40
+  bg-gradient-to-br from-card/70 via-card/50 to-muted/30
+  backdrop-blur-md
+  shadow-[0_4px_24px_hsl(var(--gold)/0.06),inset_0_1px_0_hsl(var(--gold)/0.12)]
+  transition-all duration-300 hover:scale-[1.02] hover:border-gold/30 hover:shadow-[0_8px_32px_hsl(var(--gold)/0.1)]
+  flex flex-col justify-center min-w-[200px]">
+```
 
 | 文件 | 改动 |
 |------|------|
-| `src/components/Header.tsx` | Header 标题加 italic + tracking |
-| `src/components/HeroSection.tsx` | 所有文字元素的字体层次优化 |
-| `src/components/PhotoWall.tsx` | 标题和描述文字字体优化 |
-| `src/components/AuthDialog.tsx` | 对话框文字字体优化 |
-| `src/components/PhotoLightbox.tsx` | 计数器和按钮字体优化 |
+| `src/components/HeroSection.tsx` | DateBadge 和 MilestoneBadge 的渐变背景、金色边框、光晕投影、悬停动效 |
 
