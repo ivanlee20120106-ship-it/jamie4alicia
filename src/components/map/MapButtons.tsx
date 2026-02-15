@@ -50,9 +50,9 @@ const MapButtons = ({ onSearchResult, onAddMarker }: MapButtonsProps) => {
   };
 
   const placeholders: Record<string, string> = {
-    search: "搜索地点...",
-    visited: "输入已去过的城市...",
-    planned: "输入计划中的城市...",
+    search: "Search place...",
+    visited: "Visited city...",
+    planned: "Planned city...",
   };
 
   const btnClass =
