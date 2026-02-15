@@ -47,7 +47,7 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !lat || !lng) {
-      toast.error("请填写地点名称和坐标");
+      toast.error("Please enter a place name and coordinates");
       return;
     }
 
@@ -56,13 +56,13 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
       // Refresh session
       await supabase.auth.refreshSession();
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { toast.error("请先登录"); setSubmitting(false); return; }
+      if (!user) { toast.error("Please sign in first"); setSubmitting(false); return; }
 
       let imageUrl: string | null = null;
 
       if (imageFile) {
         if (imageFile.size > 10 * 1024 * 1024) {
-          toast.error("图片不能超过 10MB");
+          toast.error("Image must be under 10MB");
           setSubmitting(false);
           return;
         }
@@ -88,13 +88,13 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
       } as any);
 
       if (error) throw error;
-      toast.success("地点已添加！");
+      toast.success("Place added successfully!");
       onAdded();
       onClose();
       // Reset
       setName(""); setDescription(""); setVisitDate(""); setImageFile(null);
     } catch (err: any) {
-      toast.error(err.message || "添加失败");
+      toast.error(err.message || "Failed to add place");
     } finally {
       setSubmitting(false);
     }
@@ -111,7 +111,7 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-2">
             <MapPin size={18} className="text-gold" />
-            <h3 className="text-lg font-display italic text-foreground">添加地点</h3>
+            <h3 className="text-lg font-display italic text-foreground">Add a Place</h3>
           </div>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X size={18} /></button>
         </div>
@@ -119,7 +119,7 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
         <form onSubmit={handleSubmit} className="space-y-3">
           <input
             type="text"
-            placeholder="地点名称 *"
+            placeholder="Place name *"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
@@ -140,7 +140,7 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
                     : "bg-muted/30 text-muted-foreground border border-border"
                 }`}
               >
-                {t === "visited" ? "🚩 已去过" : "✈️ 计划中"}
+                {t === "visited" ? "🚩 Visited" : "✈️ Planned"}
               </button>
             ))}
           </div>
@@ -149,7 +149,7 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
             <input
               type="number"
               step="any"
-              placeholder="纬度 *"
+              placeholder="Latitude *"
               value={lat}
               onChange={(e) => setLat(e.target.value)}
               required
@@ -158,17 +158,17 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
             <input
               type="number"
               step="any"
-              placeholder="经度 *"
+              placeholder="Longitude *"
               value={lng}
               onChange={(e) => setLng(e.target.value)}
               required
               className="w-full px-3 py-2 rounded-lg bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-gold/50"
             />
           </div>
-          <p className="text-[10px] text-muted-foreground font-body -mt-1">💡 也可以在地图上点击选择位置</p>
+          <p className="text-[10px] text-muted-foreground font-body -mt-1">💡 You can also tap on the map to pick a location</p>
 
           <textarea
-            placeholder="描述（可选）"
+            placeholder="Description (optional)"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
@@ -185,7 +185,7 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
           <label className="flex items-center gap-2 px-3 py-2 rounded-lg bg-background border border-border cursor-pointer hover:border-gold/40 transition-colors">
             <Upload size={16} className="text-muted-foreground" />
             <span className="text-sm text-muted-foreground font-body">
-              {imageFile ? imageFile.name : "上传图片（≤10MB）"}
+              {imageFile ? imageFile.name : "Upload a photo (max 10MB)"}
             </span>
             <input
               type="file"
@@ -200,7 +200,7 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
             disabled={submitting}
             className="w-full py-2.5 rounded-lg bg-gradient-to-r from-gold to-love text-background font-body text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            {submitting ? <><Loader2 size={14} className="animate-spin" /> 添加中...</> : "添加地点"}
+            {submitting ? <><Loader2 size={14} className="animate-spin" /> Adding...</> : "Add Place"}
           </button>
         </form>
       </div>
