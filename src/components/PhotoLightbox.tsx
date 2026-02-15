@@ -72,20 +72,20 @@ const PhotoLightbox = ({ photos, currentIndex, onClose, onDelete, onPrev, onNext
             className="max-w-full max-h-[75vh] rounded-lg object-contain select-none"
             draggable={false}
           />
-          <span className="text-muted-foreground text-xs mt-2">
+          <span className="font-display tracking-widest text-muted-foreground text-xs mt-2">
             {String(currentIndex + 1).padStart(2, "0")} / {String(photos.length).padStart(2, "0")}
           </span>
           <div className="flex gap-3 justify-center mt-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-lg bg-card border border-border text-foreground hover:border-love transition-colors"
+              className="font-body px-4 py-2 rounded-lg bg-card border border-border text-foreground hover:border-love transition-colors"
             >
               Close
             </button>
             {canDelete && (
               <button
                 onClick={() => onDelete(photo.name)}
-                className="px-4 py-2 rounded-lg bg-destructive text-destructive-foreground hover:opacity-80 transition-opacity"
+                className="font-body px-4 py-2 rounded-lg bg-destructive text-destructive-foreground hover:opacity-80 transition-opacity"
               >
                 Delete
               </button>

@@ -224,17 +224,17 @@ const PhotoWall = () => {
   return (
     <section className="relative z-10 py-12 sm:py-16 md:py-20 px-3 sm:px-4">
       <div className="text-center mb-8 sm:mb-12">
-        <h2 className="font-display text-2xl sm:text-3xl md:text-4xl text-gradient-love mb-3 sm:mb-4">
+        <h2 className="font-display italic tracking-wide text-2xl sm:text-3xl md:text-4xl text-gradient-love mb-3 sm:mb-4">
           Our Photo Wall
         </h2>
-        <p className="text-sm sm:text-lg text-muted-foreground">Capturing every beautiful moment together</p>
+        <p className="font-body italic tracking-wide text-sm sm:text-lg text-muted-foreground">Capturing every beautiful moment together</p>
       </div>
 
       {user && (
         <div className="flex justify-center mb-8 sm:mb-12">
           <label className="cursor-pointer flex items-center gap-2 px-6 py-3 rounded-full bg-card/60 backdrop-blur-sm border border-border/50 hover:bg-card/80 transition-all duration-300">
             <Upload size={18} className="text-gold" />
-            <span className="text-foreground text-sm">
+            <span className="font-body text-foreground text-sm">
               {uploading
                 ? uploadProgress
                   ? `正在上传 ${uploadProgress.current}/${uploadProgress.total}...`
