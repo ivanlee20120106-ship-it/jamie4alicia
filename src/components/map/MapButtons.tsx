@@ -19,7 +19,7 @@ const MapButtons = ({ onSearchResult, onAddMarker }: MapButtonsProps) => {
     setLoading(true);
     try {
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&accept-language=zh`
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&accept-language=en`
       );
       const data = await res.json();
       if (data.length > 0) {

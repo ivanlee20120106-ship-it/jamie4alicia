@@ -58,7 +58,7 @@ const MapContent = ({ markers, canDelete, onDelete, onAddMarker, autoOpenId }: M
   return (
     <>
       <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         updateWhenZooming={false}
         updateWhenIdle={true}
         keepBuffer={2}
@@ -86,7 +86,7 @@ const MapContent = ({ markers, canDelete, onDelete, onAddMarker, autoOpenId }: M
         <Marker position={[clicked.lat, clicked.lng]} icon={clickedIcon}>
           <Popup eventHandlers={{ remove: clearClicked }}>
             <MapPopup
-              name="点击位置"
+              name="Clicked Location"
               lat={clicked.lat}
               lng={clicked.lng}
               type="clicked"
