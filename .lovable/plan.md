@@ -1,126 +1,72 @@
 
 
-# 添加周年纪念与情人节计数器
+# 浪漫艺术风格字体排版优化
 
-## 布局设计
+## 设计理念
 
-桌面端（md 及以上）：三栏水平排列
+当前页面已使用三种字体（Dancing Script、Playfair Display、Cormorant Garamond），但使用不够系统化。优化方案将建立清晰的字体层次体系，让每种字体承担明确的角色：
 
-```text
-+---------------------+-------------------------+---------------------+
-| Xth Anniversary     | We have been together   | Xth Valentine's Day |
-| We've celebrated    |     1247 days            | We've celebrated    |
-| our Xth anniversary | Every day is the best   | our Xth Valentine's |
-+---------------------+-------------------------+---------------------+
-```
+- **Dancing Script（草书）**：仅用于核心情感标题（名字、网站标题）
+- **Playfair Display（衬线展示）**：用于日期数字、里程碑标题等需要庄重感的元素
+- **Cormorant Garamond（优雅正文）**：用于所有描述性文字、标签、副标题
 
-移动端（md 以下）：垂直堆叠
+## 文字元素逐一调整清单
 
-```text
-+-------------------------+
-| Xth Anniversary         |
-+-------------------------+
-| We have been together   |
-|     1247 days            |
-| Every day is the best   |
-+-------------------------+
-| Xth Valentine's Day     |
-+-------------------------+
-```
+### Header（`Header.tsx`）
+| 元素 | 当前 | 调整 |
+|------|------|------|
+| "Our Love Journey" | `font-script text-2xl sm:text-3xl` | 加 `italic tracking-wide`，增加字间距和斜体，更优雅 |
 
-## 动态计算逻辑
+### HeroSection（`HeroSection.tsx`）
+| 元素 | 当前 | 调整 |
+|------|------|------|
+| "Jamie & Alicia" | `font-script text-4xl...text-8xl` | 加 `italic`，保持现有大小 |
+| DateBadge 日期文字 | `font-display` | 加 `tracking-widest` 和 `font-light`，数字加宽字距更精致 |
+| DateBadge 标签（His/Her Birthday, Anniversary） | 无字体类 | 加 `font-body italic tracking-wide`，使用 Cormorant Garamond 斜体 |
+| "We have been together for" | 无字体类 | 加 `font-body italic tracking-wide`，Cormorant Garamond 斜体 |
+| 天数数字 | `font-display font-bold` | 加 `tracking-tight`，数字紧凑更有冲击力 |
+| "days" | 无字体类 | 加 `font-body italic`，配合正文字体 |
+| "Every day is the best day" | 无字体类 | 改用 `font-script text-xl sm:text-2xl text-gold/80`，用草书体突出浪漫感 |
+| MilestoneBadge 标题 | `font-display` | 保持，加 `tracking-wide` |
+| MilestoneBadge 副标题 | 无字体类 | 加 `font-body italic` |
 
-**周年纪念**：第 1 个周年纪念 = 2023.09.18，计算公式为 `currentYear - 2022`，若当前日期还没到 9 月 18 日则减 1。
+### PhotoWall（`PhotoWall.tsx`）
+| 元素 | 当前 | 调整 |
+|------|------|------|
+| "Our Photo Wall" | `font-display` | 加 `italic tracking-wide` |
+| "Capturing every beautiful moment together" | 无字体类 | 加 `font-body italic tracking-wide` |
+| "Upload Photos" | 无字体类 | 加 `font-body` |
 
-**情人节**：第 1 个情人节 = 2023.02.14（在一起后的首个），计算公式为 `currentYear - 2022`，若当前日期还没到 2 月 14 日则减 1。
+### AuthDialog（`AuthDialog.tsx`）
+| 元素 | 当前 | 调整 |
+|------|------|------|
+| "Sign In" / "Create Account" | `font-display` | 加 `italic` |
+| 按钮 "Sign In" 文字 | 无字体类 | 加 `font-body` |
+| 切换提示文字 | 无字体类 | 加 `font-body italic` |
 
-两个计数均基于 UTC+8 时区，与天数计算保持一致。
+### PhotoLightbox（`PhotoLightbox.tsx`）
+| 元素 | 当前 | 调整 |
+|------|------|------|
+| 照片计数器 "01 / 36" | 无字体类 | 加 `font-display tracking-widest` |
+| "Close" / "Delete" 按钮 | 无字体类 | 加 `font-body` |
 
 ## 技术细节
 
-**文件：`src/components/HeroSection.tsx`**
+所有改动都是 className 的增加/修改，不涉及任何结构变更。主要添加的 Tailwind 类：
 
-1. 新增两个计算函数：
-
-```text
-const getAnniversaryCount = (): number => {
-  // 基于 UTC+8 的当前日期
-  const now = new Date();
-  const utc8 = new Date(now.getTime() + 8 * 3600000);
-  const year = utc8.getUTCFullYear();
-  const month = utc8.getUTCMonth(); // 0-indexed
-  const day = utc8.getUTCDate();
-  // 还没到今年的 9.18 则减 1
-  let count = year - 2022;
-  if (month < 8 || (month === 8 && day < 18)) count--;
-  return Math.max(count, 0);
-};
-
-const getValentineCount = (): number => {
-  const now = new Date();
-  const utc8 = new Date(now.getTime() + 8 * 3600000);
-  const year = utc8.getUTCFullYear();
-  const month = utc8.getUTCMonth();
-  const day = utc8.getUTCDate();
-  let count = year - 2022;
-  if (month < 1 || (month === 1 && day < 14)) count--;
-  return Math.max(count, 0);
-};
-```
-
-2. 在 `useEffect` 的定时刷新中同时更新这两个值。
-
-3. 将原来的 Day counter 区域（第 62-71 行）重构为三栏响应式布局：
-
-```text
-<div className="mt-8 sm:mt-12 animate-fade-in-up flex flex-col md:flex-row items-center md:items-stretch justify-center gap-6 md:gap-10 w-full max-w-5xl">
-  {/* 左侧 - 周年纪念 */}
-  <MilestoneBadge
-    ordinal={anniversaries}
-    title="Anniversary"
-    subtitle="We've celebrated our"
-    suffix="anniversary"
-  />
-
-  {/* 中间 - 天数（保持原样式） */}
-  <div className="text-center">
-    <p className="...">We have been together for</p>
-    <div className="...">
-      <span className="...">{days}</span>
-      <span className="...">days</span>
-    </div>
-    <p className="...">Every day is the best day</p>
-  </div>
-
-  {/* 右侧 - 情人节 */}
-  <MilestoneBadge
-    ordinal={valentines}
-    title="Valentine's Day"
-    subtitle="We've celebrated our"
-    suffix="Valentine's Day"
-  />
-</div>
-```
-
-4. 新增 `MilestoneBadge` 组件，复用 `DateBadge` 的视觉风格（圆角边框、半透明背景、金色文字），显示序数词（1st, 2nd, 3rd, 4th...）。
-
-序数词工具函数：
-```text
-const getOrdinal = (n: number): string => {
-  const s = ["th", "st", "nd", "rd"];
-  const v = n % 100;
-  return n + (s[(v - 20) % 10] || s[v] || s[0]);
-};
-// 3 -> "3rd", 4 -> "4th"
-```
-
-## 当前预期值（2026.02.15）
-
-- 周年纪念：第 3 个（3rd Anniversary）
-- 情人节：第 4 个（4th Valentine's Day）
-- 天数：1247 天
+- `italic` — CSS font-style: italic
+- `tracking-wide` — letter-spacing: 0.025em
+- `tracking-widest` — letter-spacing: 0.1em
+- `tracking-tight` — letter-spacing: -0.025em
+- `font-light` — font-weight: 300
+- `font-body` — Cormorant Garamond（已在 index.css 定义）
+- `font-script` — Dancing Script（已在 index.css 定义）
 
 | 文件 | 改动 |
 |------|------|
-| `src/components/HeroSection.tsx` | 新增周年/情人节计算函数、MilestoneBadge 组件、三栏响应式布局 |
+| `src/components/Header.tsx` | Header 标题加 italic + tracking |
+| `src/components/HeroSection.tsx` | 所有文字元素的字体层次优化 |
+| `src/components/PhotoWall.tsx` | 标题和描述文字字体优化 |
+| `src/components/AuthDialog.tsx` | 对话框文字字体优化 |
+| `src/components/PhotoLightbox.tsx` | 计数器和按钮字体优化 |
 
