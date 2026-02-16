@@ -56,7 +56,7 @@ const MapButtons = ({ onSearchResult, onAddMarker }: MapButtonsProps) => {
   };
 
   const btnClass =
-    "w-[3rem] h-[3rem] rounded-lg flex items-center justify-center transition-all duration-200 border shadow-md";
+    "w-10 h-10 sm:w-[3rem] sm:h-[3rem] rounded-lg flex items-center justify-center transition-all duration-200 border shadow-md";
   const btnStyle = {
     background: "rgba(255, 255, 255, 0.92)",
     borderColor: "hsl(0, 0%, 80%)",
@@ -65,7 +65,7 @@ const MapButtons = ({ onSearchResult, onAddMarker }: MapButtonsProps) => {
   };
 
   return (
-    <div className="map-buttons absolute bottom-4 right-4 z-[1000] flex flex-col gap-3">
+    <div className="map-buttons absolute right-4 z-[1000] flex flex-col gap-3">
       {/* Search */}
       <div className="flex items-center gap-2">
         {activeInput === "search" && (
@@ -77,8 +77,8 @@ const MapButtons = ({ onSearchResult, onAddMarker }: MapButtonsProps) => {
               onChange={(e) => setQuery(e.target.value)}
               onBlur={() => { if (!query) setActiveInput(null); }}
               placeholder={placeholders.search}
-              className="px-3 py-2 rounded-lg text-sm border shadow-md"
-              style={{ background: "rgba(255,255,255,0.95)", borderColor: "hsl(0,0%,80%)", color: "#333", width: "12rem", outline: "none" }}
+              className="px-3 py-2 rounded-lg text-sm border shadow-md w-[9rem] sm:w-[12rem]"
+              style={{ background: "rgba(255,255,255,0.95)", borderColor: "hsl(0,0%,80%)", color: "#333", outline: "none" }}
               autoFocus
             />
           </form>
@@ -99,8 +99,8 @@ const MapButtons = ({ onSearchResult, onAddMarker }: MapButtonsProps) => {
               onChange={(e) => setQuery(e.target.value)}
               onBlur={() => { if (!query) setActiveInput(null); }}
               placeholder={placeholders.visited}
-              className="px-3 py-2 rounded-lg text-sm border shadow-md"
-              style={{ background: "rgba(255,255,255,0.95)", borderColor: "hsl(0,0%,80%)", color: "#333", width: "12rem", outline: "none" }}
+              style={{ background: "rgba(255,255,255,0.95)", borderColor: "hsl(0,0%,80%)", color: "#333", outline: "none" }}
+              className="px-3 py-2 rounded-lg text-sm border shadow-md w-[9rem] sm:w-[12rem]"
               autoFocus
             />
           </form>
@@ -121,8 +121,8 @@ const MapButtons = ({ onSearchResult, onAddMarker }: MapButtonsProps) => {
               onChange={(e) => setQuery(e.target.value)}
               onBlur={() => { if (!query) setActiveInput(null); }}
               placeholder={placeholders.planned}
-              className="px-3 py-2 rounded-lg text-sm border shadow-md"
-              style={{ background: "rgba(255,255,255,0.95)", borderColor: "hsl(0,0%,80%)", color: "#333", width: "12rem", outline: "none" }}
+              style={{ background: "rgba(255,255,255,0.95)", borderColor: "hsl(0,0%,80%)", color: "#333", outline: "none" }}
+              className="px-3 py-2 rounded-lg text-sm border shadow-md w-[9rem] sm:w-[12rem]"
               autoFocus
             />
           </form>
