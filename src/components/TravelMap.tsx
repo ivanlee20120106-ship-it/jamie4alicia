@@ -124,7 +124,7 @@ const TravelMap = () => {
             maxZoom={18}
             zoomControl={false}
             attributionControl={false}
-            className="h-[55vh] min-h-[350px] sm:h-[500px] lg:h-[650px] w-full"
+            className="map-container-height w-full"
             style={{ background: "#f2f2f2" }}
           >
             <MapContent

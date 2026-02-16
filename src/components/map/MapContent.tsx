@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
-import { TileLayer, Marker, Popup } from "react-leaflet";
+import { useState, useCallback, useEffect } from "react";
+import { TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import MapMarker from "./MapMarker";
 import MapPopup from "./MapPopup";
@@ -45,8 +45,25 @@ interface DynamicMarker {
 }
 
 const MapContent = ({ markers, canDelete, onDelete, onAddMarker, autoOpenId }: MapContentProps) => {
+  const map = useMap();
   const { clicked, clearClicked } = useClickedMarker();
   const [dynamicMarkers, setDynamicMarkers] = useState<DynamicMarker[]>([]);
+
+  // Invalidate map size on mobile viewport changes (address bar hide/show)
+  useEffect(() => {
+    let timeout: ReturnType<typeof setTimeout>;
+    const handler = () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => map.invalidateSize({ animate: false }), 150);
+    };
+    window.addEventListener("resize", handler);
+    window.addEventListener("orientationchange", handler);
+    return () => {
+      clearTimeout(timeout);
+      window.removeEventListener("resize", handler);
+      window.removeEventListener("orientationchange", handler);
+    };
+  }, [map]);
 
   const handleSearchResult = useCallback((lat: number, lng: number, name: string) => {
     setDynamicMarkers((prev) => [...prev.filter((m) => m.type !== "searched"), { lat, lng, name, type: "searched", address: name }]);

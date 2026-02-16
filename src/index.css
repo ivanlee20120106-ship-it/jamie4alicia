@@ -258,6 +258,29 @@
 
 /* ===== Map Styles ===== */
 
+/* Dynamic viewport height with fallback */
+.map-container-height {
+  height: 55vh;
+  height: 55dvh;
+  min-height: 350px;
+}
+@media (min-width: 640px) {
+  .map-container-height { height: 500px; }
+}
+@media (min-width: 1024px) {
+  .map-container-height { height: 650px; }
+}
+
+/* Prevent page scroll while panning map */
+.leaflet-container {
+  touch-action: none;
+}
+
+/* Safe-area bottom for map buttons */
+.map-buttons {
+  bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+
 /* Marker hover effect */
 .custom-div-icon {
   transition: transform 0.2s ease;
