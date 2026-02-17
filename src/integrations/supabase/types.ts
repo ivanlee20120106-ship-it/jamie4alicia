@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      cache_entries: {
+        Row: {
+          access_count: number
+          category: string
+          created_at: string
+          expires_at: string
+          id: string
+          key: string
+          last_accessed_at: string
+          ttl_seconds: number
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          access_count?: number
+          category?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          key: string
+          last_accessed_at?: string
+          ttl_seconds?: number
+          updated_at?: string
+          value?: Json
+        }
+        Update: {
+          access_count?: number
+          category?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          key?: string
+          last_accessed_at?: string
+          ttl_seconds?: number
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       photo_wall_items: {
         Row: {
           added_at: string | null
@@ -215,7 +254,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cleanup_expired_cache_entries: { Args: never; Returns: number }
     }
     Enums: {
       [_ in never]: never
