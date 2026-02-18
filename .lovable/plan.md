@@ -1,87 +1,95 @@
 
 
-## 方案概述
+## 地图样式优化方案
 
-基于当前项目架构，利用 Lovable Cloud 数据库作为数据源，在前端实现带有智能缓存、过期清理、实时更新、筛选排序的数据管理仪表盘。
+参考 Destinero 项目的视觉风格，对当前地图组件进行样式升级，使地图更具视觉表现力和交互感。
 
 ---
 
-## 1. 数据库层
+## 改动概要
 
-创建一条数据库迁移，新建 `cache_entries` 表用于演示数据存储：
+### 1. 瓦片图层升级
 
-| 列名 | 类型 | 说明 |
-|------|------|------|
-| id | uuid (PK) | 主键 |
-| key | text (UNIQUE) | 缓存键名 |
-| value | jsonb | 存储的数据 |
-| category | text | 分类（用于筛选） |
-| ttl_seconds | integer | 过期时间（秒） |
-| expires_at | timestamptz | 到期时间戳 |
-| access_count | integer | 访问计数 |
-| last_accessed_at | timestamptz | 最后访问时间 |
-| created_at | timestamptz | 创建时间 |
-| updated_at | timestamptz | 更新时间 |
+当前使用 CartoDB Light（纯灰白色调），改为 **MapTiler Streets** 风格（更丰富的彩色地图），与 Destinero 保持一致。使用免费的 OpenStreetMap 标准瓦片作为备选（无需 API Key）。
 
-- 启用 Realtime 以支持实时推送
-- 配置 RLS 策略：公开读取，认证用户可写
-- 创建数据库函数自动清理过期条目
+**文件**: `src/components/map/MapContent.tsx`
+- 将 TileLayer URL 从 `cartocdn.com/light_all` 改为 `tile.openstreetmap.org` 标准彩色瓦片
 
-## 2. 前端缓存层（内存数据库优化）
+### 2. 标记图标增强
 
-新建 `src/hooks/useSmartCache.ts`：
+参考 Destinero 的图标风格，将当前 SVG 内联图标改为更大、更鲜明的样式：
 
-- 在浏览器端实现一个 **带 TTL 的 LRU 内存缓存**（类似 Redis 的功能）
-- 缓存策略：
-  - 首次请求从数据库读取，存入内存缓存
-  - 后续读取命中缓存则直接返回（避免重复请求）
-  - 每个条目有独立的 TTL，到期自动清除
-  - 内存上限控制（如 100 条），超出时淘汰最久未用的条目
-- 提供 `get` / `set` / `invalidate` / `stats` 等方法
-- 记录缓存命中率等统计信息
+- **Visited（已访问）**: 深蓝色旗帜图标 (`#003380`)，对应 Destinero 的 `PiFlagPennantFill`
+- **Planned（计划中）**: 粉红色飞机图标 (`#ff249c`)，对应 Destinero 的 `BiSolidPlaneAlt`
+- **Highlighted 标记**: 新增心跳脉冲动画效果（参考 Destinero 的 `pulse` 动画）
+- 图标 hover 时放大效果（已有，保持一致）
 
-## 3. 实时更新模块
+**文件**: `src/components/map/MapMarker.tsx`
+- 更新 `flagSvg` 和 `planeSvg` 的颜色方案
+- 调整 `iconAnchor` 使图标定位更精确
 
-新建 `src/hooks/useCacheRealtime.ts`：
+**文件**: `src/components/map/MapContent.tsx`
+- 更新 `clickedIcon`、`searchedIcon`、`liveIcon` 颜色
 
-- 使用 Supabase Realtime 监听 `cache_entries` 表的 INSERT / UPDATE / DELETE 事件
-- 收到变更后自动刷新本地缓存和 UI
+### 3. 弹窗（Popup）样式优化
 
-## 4. 前端展示页面
+参考 Destinero 的弹窗设计，优化 Leaflet 弹窗样式：
 
-新建 `src/pages/DataDashboard.tsx`：
+- 弹窗内容居中对齐
+- 图片 hover 时微缩放 + 绿色辉光边框效果
+- 坐标文字使用等宽字体
+- 国旗 emoji 展示（为动态标记增加国家标识）
 
-- **统计卡片区**：显示总条目数、缓存命中率、内存使用量、过期条目数
-- **数据表格**：展示所有缓存条目，包含 key、category、TTL、过期时间、访问次数等列
-- **筛选功能**：按分类下拉筛选、按关键词搜索
-- **排序功能**：点击表头按列排序（升/降序切换）
-- **加载动画**：数据加载时显示 Skeleton 骨架屏
-- **操作按钮**：新增条目、清理过期数据、手动刷新
-- 界面风格与现有项目保持一致
+**文件**: `src/components/map/MapPopup.tsx`
+- 增加图片 hover 效果
+- 为动态标记（clicked/searched/live）添加国家代码解析和国旗展示
+- 优化标题样式
 
-## 5. 路由集成
+**文件**: `src/index.css`
+- 添加 `.leaflet-popup-content-wrapper` 的全局样式覆写
+- 添加弹窗图片 hover 效果 CSS
 
-在 `src/App.tsx` 中添加 `/dashboard` 路由指向 DataDashboard 页面。
+### 4. 按钮样式对齐
+
+参考 Destinero 的蓝色实心按钮风格：
+
+- 按钮背景改为蓝色实心 (`rgb(0, 94, 172)`)
+- 图标改为白色
+- 搜索框展开动画（从右侧滑出）
+- 新增「重置视图」和「定位」按钮
+
+**文件**: `src/components/map/MapButtons.tsx`
+- 更新按钮样式为蓝色实心风格
+- 添加全屏重置按钮
+- 添加实时定位按钮
+- 搜索输入框使用 CSS 过渡动画展开
+
+### 5. CSS 动画增强
+
+**文件**: `src/index.css`
+- 新增 marker `pulse` 动画关键帧（用于高亮标记）
+- 新增搜索框滑出过渡动画
+- 优化 `.custom-div-icon` 的过渡效果
+- 弹窗图片 hover 缩放 + 辉光效果
+
+---
+
+## 涉及文件一览
+
+| 操作 | 文件 | 改动内容 |
+|------|------|----------|
+| 修改 | `src/components/map/MapContent.tsx` | 瓦片图层 URL、动态图标颜色 |
+| 修改 | `src/components/map/MapMarker.tsx` | 标记图标 SVG 颜色方案 |
+| 修改 | `src/components/map/MapPopup.tsx` | 弹窗图片 hover 效果、国旗展示 |
+| 修改 | `src/components/map/MapButtons.tsx` | 蓝色实心按钮、定位/重置按钮、搜索框动画 |
+| 修改 | `src/index.css` | 弹窗全局样式、pulse 动画、搜索框动画 |
 
 ---
 
 ## 技术要点
 
-- **无需 Redis**：浏览器端 LRU 缓存 + 数据库持久化已满足需求，无需额外外部服务
-- **实时同步**：通过 Realtime 订阅实现多端数据同步
-- **自动清理**：数据库侧定时函数 + 前端侧 TTL 检查双重保障
-- **响应式设计**：移动端适配
-
-## 涉及文件
-
-| 操作 | 文件 |
-|------|------|
-| 新建 | `src/hooks/useSmartCache.ts` |
-| 新建 | `src/hooks/useCacheRealtime.ts` |
-| 新建 | `src/pages/DataDashboard.tsx` |
-| 新建 | `src/components/dashboard/CacheStatsCards.tsx` |
-| 新建 | `src/components/dashboard/CacheDataTable.tsx` |
-| 新建 | `src/components/dashboard/AddCacheEntryDialog.tsx` |
-| 修改 | `src/App.tsx`（添加路由） |
-| 数据库迁移 | 创建 `cache_entries` 表、RLS 策略、清理函数、启用 Realtime |
+- 不引入新依赖，继续使用 lucide-react 图标
+- 保持现有功能（筛选、删除、添加标记）完全不变
+- 颜色方案融合项目现有主题（gold/love/primary）与 Destinero 的蓝+粉配色
+- 瓦片使用免费的 OpenStreetMap 标准瓦片，无需 API Key
 
