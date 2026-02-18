@@ -4,6 +4,7 @@ import OrbitingSwatches from "@/components/OrbitingSwatches";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import PhotoWall from "@/components/PhotoWall";
+import Footer from "@/components/Footer";
 
 const TravelMap = lazy(() => import("@/components/TravelMap"));
 
@@ -56,6 +57,7 @@ const Index = () => {
       <HeroSection />
       <PhotoWall />
       <LazyTravelMap />
+      <Footer />
     </div>
   );
 };
