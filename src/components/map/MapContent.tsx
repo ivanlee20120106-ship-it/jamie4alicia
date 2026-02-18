@@ -28,9 +28,9 @@ interface MapContentProps {
 }
 
 // Dynamic marker icons
-const clickedIconHtml = `<div class="custom-div-icon custom-div-icon--clicked"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="hsl(28,57%,53%)" stroke="hsl(28,57%,53%)" stroke-width="1.5" style="width:1.8rem;height:1.8rem;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.5))"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3" fill="rgba(15,20,35,0.8)"/></svg></div>`;
-const searchedIconHtml = `<div class="custom-div-icon custom-div-icon--searched"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="hsl(219,79%,66%)" stroke="hsl(219,79%,66%)" stroke-width="1.5" style="width:1.8rem;height:1.8rem;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.5))"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3" fill="rgba(15,20,35,0.8)"/></svg></div>`;
-const liveIconHtml = `<div class="custom-div-icon custom-div-icon--live"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="hsl(0,84%,60%)" stroke="hsl(0,84%,60%)" stroke-width="1.5" style="width:1.8rem;height:1.8rem;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.5))"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3" fill="rgba(15,20,35,0.8)"/></svg></div>`;
+const clickedIconHtml = `<div class="custom-div-icon custom-div-icon--clicked"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#005eac" stroke="#005eac" stroke-width="1.5" style="width:2rem;height:2rem;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4))"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3" fill="#fff"/></svg></div>`;
+const searchedIconHtml = `<div class="custom-div-icon custom-div-icon--searched"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#003380" stroke="#003380" stroke-width="1.5" style="width:2rem;height:2rem;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4))"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3" fill="#fff"/></svg></div>`;
+const liveIconHtml = `<div class="custom-div-icon custom-div-icon--live marker-pulse"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ff249c" stroke="#ff249c" stroke-width="1.5" style="width:2rem;height:2rem;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4))"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3" fill="#fff"/></svg></div>`;
 
 const clickedIcon = L.divIcon({ html: clickedIconHtml, className: "", iconSize: [30, 30], iconAnchor: [15, 30] });
 const searchedIcon = L.divIcon({ html: searchedIconHtml, className: "", iconSize: [30, 30], iconAnchor: [15, 30] });
@@ -74,7 +74,8 @@ const MapContent = ({ markers, canDelete, onDelete, onAddMarker, autoOpenId }: M
   return (
     <>
       <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         updateWhenZooming={false}
         updateWhenIdle={true}
         keepBuffer={2}

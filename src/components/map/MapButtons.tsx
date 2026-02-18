@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { useMap } from "react-leaflet";
-import { Search, Loader2, Flag, Plane } from "lucide-react";
+import { Search, Loader2, Flag, Plane, LocateFixed, Maximize2 } from "lucide-react";
 
 interface MapButtonsProps {
   onSearchResult?: (lat: number, lng: number, name: string) => void;
@@ -55,13 +55,24 @@ const MapButtons = ({ onSearchResult, onAddMarker }: MapButtonsProps) => {
     planned: "Planned city...",
   };
 
+  const handleLocate = useCallback(() => {
+    navigator.geolocation?.getCurrentPosition(
+      (pos) => map.flyTo([pos.coords.latitude, pos.coords.longitude], 13, { duration: 1.5 }),
+      () => {},
+      { enableHighAccuracy: true }
+    );
+  }, [map]);
+
+  const handleResetView = useCallback(() => {
+    map.flyTo([20, 0], 2, { duration: 1.2 });
+  }, [map]);
+
   const btnClass =
-    "w-10 h-10 sm:w-[3rem] sm:h-[3rem] rounded-lg flex items-center justify-center transition-all duration-200 border shadow-md";
+    "w-10 h-10 sm:w-[3rem] sm:h-[3rem] rounded-lg flex items-center justify-center transition-all duration-200 shadow-lg";
   const btnStyle = {
-    background: "rgba(255, 255, 255, 0.92)",
-    borderColor: "hsl(0, 0%, 80%)",
-    color: "hsl(0, 0%, 30%)",
-    backdropFilter: "blur(8px)",
+    background: "rgb(0, 94, 172)",
+    color: "#fff",
+    border: "none",
   };
 
   return (
@@ -77,13 +88,13 @@ const MapButtons = ({ onSearchResult, onAddMarker }: MapButtonsProps) => {
               onChange={(e) => setQuery(e.target.value)}
               onBlur={() => { if (!query) setActiveInput(null); }}
               placeholder={placeholders.search}
-              className="px-3 py-2 rounded-lg text-sm border shadow-md w-[9rem] sm:w-[12rem]"
+              className="map-search-input px-3 py-2 rounded-lg text-sm border shadow-md w-[9rem] sm:w-[12rem]"
               style={{ background: "rgba(255,255,255,0.95)", borderColor: "hsl(0,0%,80%)", color: "#333", outline: "none" }}
               autoFocus
             />
           </form>
         )}
-        <button className={btnClass} style={btnStyle} onClick={() => activeInput === "search" ? searchAndAct("search") : openInput("search")}>
+        <button className={btnClass} style={btnStyle} onClick={() => activeInput === "search" ? searchAndAct("search") : openInput("search")} title="Search">
           {loading && activeInput === "search" ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
         </button>
       </div>
@@ -100,12 +111,12 @@ const MapButtons = ({ onSearchResult, onAddMarker }: MapButtonsProps) => {
               onBlur={() => { if (!query) setActiveInput(null); }}
               placeholder={placeholders.visited}
               style={{ background: "rgba(255,255,255,0.95)", borderColor: "hsl(0,0%,80%)", color: "#333", outline: "none" }}
-              className="px-3 py-2 rounded-lg text-sm border shadow-md w-[9rem] sm:w-[12rem]"
+              className="map-search-input px-3 py-2 rounded-lg text-sm border shadow-md w-[9rem] sm:w-[12rem]"
               autoFocus
             />
           </form>
         )}
-        <button className={btnClass} style={{ ...btnStyle, color: "hsl(34, 57%, 50%)" }} onClick={() => activeInput === "visited" ? searchAndAct("visited") : openInput("visited")}>
+        <button className={btnClass} style={{ ...btnStyle, background: "#003380" }} onClick={() => activeInput === "visited" ? searchAndAct("visited") : openInput("visited")} title="Add visited">
           {loading && activeInput === "visited" ? <Loader2 size={18} className="animate-spin" /> : <Flag size={18} />}
         </button>
       </div>
@@ -122,15 +133,25 @@ const MapButtons = ({ onSearchResult, onAddMarker }: MapButtonsProps) => {
               onBlur={() => { if (!query) setActiveInput(null); }}
               placeholder={placeholders.planned}
               style={{ background: "rgba(255,255,255,0.95)", borderColor: "hsl(0,0%,80%)", color: "#333", outline: "none" }}
-              className="px-3 py-2 rounded-lg text-sm border shadow-md w-[9rem] sm:w-[12rem]"
+              className="map-search-input px-3 py-2 rounded-lg text-sm border shadow-md w-[9rem] sm:w-[12rem]"
               autoFocus
             />
           </form>
         )}
-        <button className={btnClass} style={{ ...btnStyle, color: "hsl(219, 79%, 56%)" }} onClick={() => activeInput === "planned" ? searchAndAct("planned") : openInput("planned")}>
+        <button className={btnClass} style={{ ...btnStyle, background: "#ff249c" }} onClick={() => activeInput === "planned" ? searchAndAct("planned") : openInput("planned")}>
           {loading && activeInput === "planned" ? <Loader2 size={18} className="animate-spin" /> : <Plane size={18} />}
         </button>
       </div>
+
+      {/* Locate */}
+      <button className={btnClass} style={btnStyle} onClick={handleLocate} title="My location">
+        <LocateFixed size={18} />
+      </button>
+
+      {/* Reset View */}
+      <button className={btnClass} style={{ ...btnStyle, background: "rgb(0, 70, 130)" }} onClick={handleResetView} title="Reset view">
+        <Maximize2 size={18} />
+      </button>
     </div>
   );
 };
