@@ -7,6 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { generateSizes } from "@/lib/imageProcessing";
+import { travelMarkerSchema } from "@/lib/schemas";
 
 interface AddMarkerDialogProps {
   isOpen: boolean;
@@ -57,7 +58,22 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) { toast.error("Please enter a place name"); return; }
+
+    const parsedLat = parseFloat(lat);
+    const parsedLng = parseFloat(lng);
+    const markerData = {
+      name: name.trim(),
+      lat: parsedLat,
+      lng: parsedLng,
+      type,
+      description: description.trim() || null,
+      visit_date: visitDate ? format(visitDate, "yyyy-MM-dd") : null,
+    };
+    const parsed = travelMarkerSchema.safeParse(markerData);
+    if (!parsed.success) {
+      toast.error(parsed.error.errors[0].message);
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -75,7 +91,6 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
         const uuid = crypto.randomUUID();
         const basePath = `${user.id}/${uuid}`;
 
-        // Upload all 3 sizes to marker-images bucket
         const [okOrig, okMid, okThumb] = await Promise.all([
           supabase.storage.from("marker-images").upload(`${basePath}.jpg`, original, { contentType: "image/jpeg" }).then(r => !r.error),
           supabase.storage.from("marker-images").upload(`${basePath}_mid.jpg`, medium, { contentType: "image/jpeg" }).then(r => !r.error),
@@ -87,7 +102,6 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
         const storagePath = `${basePath}.jpg`;
         imageUrl = supabase.storage.from("marker-images").getPublicUrl(storagePath).data.publicUrl;
 
-        // Insert into photos table
         const { data: photoRow, error: photoErr } = await supabase.from("photos").insert({
           filename: `${uuid}.jpg`,
           original_filename: imageFile.name,
@@ -99,30 +113,22 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
           thumbnail_path: okThumb ? `${basePath}_thumb.jpg` : null,
           compressed_path: okMid ? `${basePath}_mid.jpg` : null,
           is_heif: isHeif,
-          latitude: parseFloat(lat) || null,
-          longitude: parseFloat(lng) || null,
-          location_name: name.trim(),
+          latitude: parsed.data.lat,
+          longitude: parsed.data.lng,
+          location_name: parsed.data.name,
           user_id: user.id,
         }).select("id").single();
 
         if (!photoErr && photoRow) photoId = photoRow.id;
       }
 
-      const parsedLat = parseFloat(lat);
-      const parsedLng = parseFloat(lng);
-      if (isNaN(parsedLat) || isNaN(parsedLng)) {
-        toast.error("Please search for coordinates or enter them manually");
-        setSubmitting(false);
-        return;
-      }
-
       const { error } = await supabase.from("travel_markers" as any).insert({
-        name: name.trim(),
-        lat: parsedLat,
-        lng: parsedLng,
-        type,
-        description: description.trim() || null,
-        visit_date: visitDate ? format(visitDate, "yyyy-MM-dd") : null,
+        name: parsed.data.name,
+        lat: parsed.data.lat,
+        lng: parsed.data.lng,
+        type: parsed.data.type,
+        description: parsed.data.description || null,
+        visit_date: parsed.data.visit_date || null,
         image_url: imageUrl,
         photo_id: photoId,
         user_id: user.id,

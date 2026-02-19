@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Heart, LogOut, X } from "lucide-react";
 import { toast } from "sonner";
 import type { User } from "@supabase/supabase-js";
+import { authSchema } from "@/lib/schemas";
 
 interface AuthDialogProps {
   user: User | null;
@@ -20,10 +21,15 @@ const AuthDialog = ({ user, onSignIn, onSignUp, onSignOut }: AuthDialogProps) =>
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const parsed = authSchema.safeParse({ email, password });
+    if (!parsed.success) {
+      toast.error(parsed.error.errors[0].message);
+      return;
+    }
     setSubmitting(true);
     const { error } = isSignUp
-      ? await onSignUp(email, password)
-      : await onSignIn(email, password);
+      ? await onSignUp(parsed.data.email, parsed.data.password)
+      : await onSignIn(parsed.data.email, parsed.data.password);
     setSubmitting(false);
 
     if (error) {

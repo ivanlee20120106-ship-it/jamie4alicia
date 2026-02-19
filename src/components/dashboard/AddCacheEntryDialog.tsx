@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { cacheEntrySchema } from '@/lib/schemas';
 
 const CATEGORIES = ['general', 'user', 'config', 'session', 'analytics'];
 
@@ -22,10 +23,6 @@ export function AddCacheEntryDialog({ open, onOpenChange }: Props) {
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
-    if (!key.trim()) {
-      toast({ title: '请输入键名', variant: 'destructive' });
-      return;
-    }
     let parsedValue: unknown;
     try {
       parsedValue = JSON.parse(value);
@@ -33,15 +30,25 @@ export function AddCacheEntryDialog({ open, onOpenChange }: Props) {
       toast({ title: 'JSON 格式无效', variant: 'destructive' });
       return;
     }
-    setLoading(true);
     const ttlNum = parseInt(ttl) || 3600;
-    const expiresAt = new Date(Date.now() + ttlNum * 1000).toISOString();
-
-    const { error } = await supabase.from('cache_entries').insert([{
+    const parsed = cacheEntrySchema.safeParse({
       key: key.trim(),
-      value: parsedValue as any,
+      value: parsedValue,
       category,
       ttl_seconds: ttlNum,
+    });
+    if (!parsed.success) {
+      toast({ title: parsed.error.errors[0].message, variant: 'destructive' });
+      return;
+    }
+    setLoading(true);
+    const expiresAt = new Date(Date.now() + parsed.data.ttl_seconds * 1000).toISOString();
+
+    const { error } = await supabase.from('cache_entries').insert([{
+      key: parsed.data.key,
+      value: parsed.data.value as any,
+      category: parsed.data.category,
+      ttl_seconds: parsed.data.ttl_seconds,
       expires_at: expiresAt,
     }]);
 
