@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { useMap } from "react-leaflet";
 import { Search, Loader2, Flag, Plane, LocateFixed, Maximize2 } from "lucide-react";
+import { geocodeSearch } from "@/lib/geocoding";
 
 interface MapButtonsProps {
   onSearchResult?: (lat: number, lng: number, name: string) => void;
@@ -18,10 +19,7 @@ const MapButtons = ({ onSearchResult, onAddMarker }: MapButtonsProps) => {
     if (!query.trim()) return;
     setLoading(true);
     try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&accept-language=en`
-      );
-      const data = await res.json();
+      const data = await geocodeSearch(query);
       if (data.length > 0) {
         const { lat, lon, display_name } = data[0];
         const latN = parseFloat(lat);

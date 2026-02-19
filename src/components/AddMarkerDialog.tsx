@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { generateSizes } from "@/lib/imageProcessing";
 import { travelMarkerSchema } from "@/lib/schemas";
+import { geocodeSearch } from "@/lib/geocoding";
 
 interface AddMarkerDialogProps {
   isOpen: boolean;
@@ -31,10 +32,7 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
     if (!name.trim()) return;
     setGeocoding(true);
     try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(name.trim())}&format=json&limit=1&accept-language=en`
-      );
-      const data = await res.json();
+      const data = await geocodeSearch(name.trim());
       if (data.length > 0) {
         setLat(parseFloat(data[0].lat).toFixed(4));
         setLng(parseFloat(data[0].lon).toFixed(4));
