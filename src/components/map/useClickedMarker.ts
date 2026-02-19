@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { useMapEvents } from "react-leaflet";
+import { geocodeReverse } from "@/lib/geocoding";
 
 export interface ClickedLocation {
   lat: number;
@@ -7,18 +8,6 @@ export interface ClickedLocation {
   address: string | null;
   loading: boolean;
 }
-
-const reverseGeocode = async (lat: number, lng: number): Promise<string> => {
-  try {
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=en`
-    );
-    const data = await res.json();
-    return data.display_name || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
-  } catch {
-    return `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
-  }
-};
 
 const useClickedMarker = () => {
   const [clicked, setClicked] = useState<ClickedLocation | null>(null);
@@ -41,7 +30,7 @@ const useClickedMarker = () => {
       const { lat, lng } = e.latlng;
       setClicked({ lat, lng, address: null, loading: true });
 
-      const address = await reverseGeocode(lat, lng);
+      const address = await geocodeReverse(lat, lng);
       setClicked({ lat, lng, address, loading: false });
     },
   });
