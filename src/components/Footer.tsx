@@ -9,7 +9,7 @@ const Footer = () => {
           </span>
           .{" "}
           <span className="font-script text-base" style={{ color: "hsl(var(--love-glow))" }}>
-            晚安！爱你！每一天！
+            Good Night! Love You! Every Single Day!
           </span>{" "}
           All rights reserved.
         </p>
