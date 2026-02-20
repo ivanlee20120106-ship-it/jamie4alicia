@@ -9,6 +9,11 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
 const DataDashboard = lazy(() => import("./pages/DataDashboard"));
+const BlogList = lazy(() => import("./pages/BlogList"));
+const BlogPost = lazy(() => import("./pages/BlogPost"));
+const BlogNew = lazy(() => import("./pages/BlogNew"));
+const BlogEdit = lazy(() => import("./pages/BlogEdit"));
+const BlogManage = lazy(() => import("./pages/BlogManage"));
 
 const queryClient = new QueryClient();
 
@@ -29,6 +34,11 @@ const App = () => (
                 </Suspense>
               }
             />
+            <Route path="/blog" element={<Suspense fallback={<div className="min-h-screen bg-background" />}><BlogList /></Suspense>} />
+            <Route path="/blog/new" element={<Suspense fallback={<div className="min-h-screen bg-background" />}><BlogNew /></Suspense>} />
+            <Route path="/blog/manage" element={<Suspense fallback={<div className="min-h-screen bg-background" />}><BlogManage /></Suspense>} />
+            <Route path="/blog/edit/:slug" element={<Suspense fallback={<div className="min-h-screen bg-background" />}><BlogEdit /></Suspense>} />
+            <Route path="/blog/:slug" element={<Suspense fallback={<div className="min-h-screen bg-background" />}><BlogPost /></Suspense>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
