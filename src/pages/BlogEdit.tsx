@@ -16,7 +16,7 @@ const BlogEdit = () => {
   if (!user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">请先登录</p>
+        <p className="text-muted-foreground">Please sign in first</p>
       </div>
     );
   }
@@ -29,11 +29,11 @@ const BlogEdit = () => {
       <Header />
       <main className="relative z-10 pt-24 pb-16 px-4">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-display font-bold text-foreground mb-6">编辑文章</h1>
+          <h1 className="text-3xl font-display font-bold text-foreground mb-6">Edit Post</h1>
           {isLoading ? (
             <Skeleton className="h-96" />
           ) : !post ? (
-            <p className="text-muted-foreground">文章不存在</p>
+            <p className="text-muted-foreground">Post not found</p>
           ) : (
             <BlogEditor
               initial={post}

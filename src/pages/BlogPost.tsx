@@ -14,7 +14,7 @@ function readingTime(content: string) {
 }
 
 function formatDate(d: string) {
-  return new Date(d).toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" });
+  return new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 }
 
 const BlogPost = () => {
@@ -32,7 +32,7 @@ const BlogPost = () => {
       <main className="relative z-10 pt-24 pb-16 px-4">
         <div className="max-w-3xl mx-auto">
           <Button asChild variant="ghost" size="sm" className="mb-6">
-            <Link to="/blog"><ChevronLeft className="w-4 h-4 mr-1" />返回博客</Link>
+            <Link to="/blog"><ChevronLeft className="w-4 h-4 mr-1" />Back to Blog</Link>
           </Button>
 
           {isLoading ? (
@@ -42,7 +42,7 @@ const BlogPost = () => {
               <Skeleton className="h-96" />
             </div>
           ) : !post ? (
-            <p className="text-center text-muted-foreground py-20">文章不存在</p>
+            <p className="text-center text-muted-foreground py-20">Post not found</p>
           ) : (
             <article>
               {post.cover_image && (
@@ -55,7 +55,7 @@ const BlogPost = () => {
 
               <div className="flex items-center gap-3 text-sm text-muted-foreground mb-3">
                 <span className="flex items-center gap-1"><Calendar className="w-4 h-4" />{formatDate(post.created_at)}</span>
-                <span className="flex items-center gap-1"><Clock className="w-4 h-4" />{readingTime(post.content)} 分钟阅读</span>
+                <span className="flex items-center gap-1"><Clock className="w-4 h-4" />{readingTime(post.content)} min read</span>
               </div>
 
               <h1 className="text-3xl lg:text-4xl font-display font-bold text-foreground mb-3">
@@ -82,7 +82,7 @@ const BlogPost = () => {
 
               <div className="text-center">
                 <Button asChild variant="outline">
-                  <Link to="/blog"><ChevronLeft className="w-4 h-4 mr-1" />返回博客列表</Link>
+                  <Link to="/blog"><ChevronLeft className="w-4 h-4 mr-1" />Back to Blog</Link>
                 </Button>
               </div>
             </article>

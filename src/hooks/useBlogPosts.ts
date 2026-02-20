@@ -87,7 +87,7 @@ export function useCreatePost() {
 
   return useMutation({
     mutationFn: async (input: { title: string; description?: string; content: string; tags?: string[]; published?: boolean; cover_image?: string }) => {
-      if (!user) throw new Error("未登录");
+      if (!user) throw new Error("Not signed in");
       const slug = generateSlug(input.title);
       const { data, error } = await supabase
         .from("blog_posts")
@@ -108,7 +108,7 @@ export function useCreatePost() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["blog-posts"] });
-      toast.success("文章已创建");
+      toast.success("Post created");
     },
     onError: (e) => toast.error(e.message),
   });
@@ -130,7 +130,7 @@ export function useUpdatePost() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["blog-posts"] });
-      toast.success("文章已更新");
+      toast.success("Post updated");
     },
     onError: (e) => toast.error(e.message),
   });
@@ -146,7 +146,7 @@ export function useDeletePost() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["blog-posts"] });
-      toast.success("文章已删除");
+      toast.success("Post deleted");
     },
     onError: (e) => toast.error(e.message),
   });

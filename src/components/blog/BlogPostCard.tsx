@@ -10,7 +10,7 @@ function readingTime(content: string) {
 }
 
 function formatDate(d: string) {
-  return new Date(d).toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" });
+  return new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 }
 
 const BlogPostCard = ({ post }: { post: BlogPost }) => (
@@ -31,7 +31,7 @@ const BlogPostCard = ({ post }: { post: BlogPost }) => (
           <Calendar className="w-3 h-3" />
           <span>{formatDate(post.created_at)}</span>
           <span>·</span>
-          <span>{readingTime(post.content)} 分钟阅读</span>
+          <span>{readingTime(post.content)} min read</span>
         </div>
         <h3 className="text-lg font-display font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2">
           {post.title}

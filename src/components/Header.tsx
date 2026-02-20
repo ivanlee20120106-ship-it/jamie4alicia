@@ -14,7 +14,7 @@ const Header = () => {
           <Button asChild variant="ghost" size="sm" className="gap-1 text-muted-foreground hover:text-foreground">
             <Link to="/blog">
               <BookOpen className="w-4 h-4" />
-              <span className="hidden sm:inline">博客</span>
+              <span className="hidden sm:inline">Blog</span>
             </Link>
           </Button>
         </div>
