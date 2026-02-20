@@ -50,27 +50,27 @@ const BlogEditor = ({ initial, onSave, saving }: Props) => {
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="title">标题</Label>
-          <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="文章标题" />
+          <Label htmlFor="title">Title</Label>
+          <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Post title" />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="cover">封面图片 URL</Label>
+          <Label htmlFor="cover">Cover Image URL</Label>
           <Input id="cover" value={coverImage} onChange={(e) => setCoverImage(e.target.value)} placeholder="https://..." />
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="desc">描述</Label>
-        <Input id="desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="简短描述..." />
+        <Label htmlFor="desc">Description</Label>
+        <Input id="desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="A brief summary..." />
       </div>
 
       <div className="space-y-2">
-        <Label>标签</Label>
+        <Label>Tags</Label>
         <div className="flex items-center gap-2">
           <Input
             value={tagInput}
             onChange={(e) => setTagInput(e.target.value)}
-            placeholder="输入标签后按回车"
+            placeholder="Type a tag and press Enter"
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(); } }}
           />
           <Button type="button" size="icon" variant="outline" onClick={addTag}>
@@ -94,24 +94,24 @@ const BlogEditor = ({ initial, onSave, saving }: Props) => {
       <div className="flex items-center gap-2 mb-2">
         <Button variant={preview ? "default" : "outline"} size="sm" onClick={() => setPreview(!preview)}>
           <Eye className="w-4 h-4 mr-1" />
-          {preview ? "编辑" : "预览"}
+          {preview ? "Edit" : "Preview"}
         </Button>
       </div>
 
       {preview ? (
         <Card>
-          <CardHeader><CardTitle>{title || "无标题"}</CardTitle></CardHeader>
+          <CardHeader><CardTitle>{title || "Untitled"}</CardTitle></CardHeader>
           <CardContent><MarkdownRenderer content={content} /></CardContent>
         </Card>
       ) : (
         <div className="space-y-2">
-          <Label htmlFor="content">内容（Markdown）</Label>
+          <Label htmlFor="content">Content (Markdown)</Label>
           <textarea
             id="content"
             value={content}
             onChange={(e) => setContent(e.target.value)}
             className="w-full min-h-[400px] rounded-lg border border-border bg-muted/50 p-4 text-sm font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-y"
-            placeholder="使用 Markdown 格式撰写文章内容..."
+            placeholder="Write your post in Markdown..."
           />
         </div>
       )}
@@ -119,11 +119,11 @@ const BlogEditor = ({ initial, onSave, saving }: Props) => {
       <div className="flex items-center gap-3 justify-end">
         <Button variant="outline" onClick={() => handleSave(false)} disabled={saving || !title}>
           <Save className="w-4 h-4 mr-1" />
-          保存草稿
+          Save Draft
         </Button>
         <Button onClick={() => handleSave(true)} disabled={saving || !title}>
           <Send className="w-4 h-4 mr-1" />
-          发布
+          Publish
         </Button>
       </div>
     </div>

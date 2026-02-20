@@ -19,7 +19,6 @@ const BlogList = () => {
 
   return (
     <div className="min-h-screen bg-background relative overflow-x-hidden">
-      {/* Background */}
       <div className="fixed inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-br from-background via-card to-secondary" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--love)/0.15),transparent_50%)]" />
@@ -29,27 +28,25 @@ const BlogList = () => {
 
       <main className="relative z-10 pt-24 pb-16 px-4">
         <div className="max-w-5xl mx-auto">
-          {/* Title */}
           <div className="text-center mb-8">
             <h1 className="text-4xl lg:text-5xl font-display font-bold text-gradient-love glow-gold mb-3">
-              博客
+              Blog
             </h1>
             <p className="text-muted-foreground max-w-lg mx-auto">
-              记录我们的想法、故事和灵感
+              Thoughts, stories, and moments from our journey together
             </p>
             {user && (
               <div className="mt-4 flex justify-center gap-3">
                 <Button asChild size="sm">
-                  <Link to="/blog/new"><PenLine className="w-4 h-4 mr-1" />写文章</Link>
+                  <Link to="/blog/new"><PenLine className="w-4 h-4 mr-1" />Write a Post</Link>
                 </Button>
                 <Button asChild variant="outline" size="sm">
-                  <Link to="/blog/manage">管理文章</Link>
+                  <Link to="/blog/manage">Manage Posts</Link>
                 </Button>
               </div>
             )}
           </div>
 
-          {/* Tags */}
           {tags && tags.length > 0 && (
             <>
               <div className="flex flex-wrap justify-center gap-2 mb-6">
@@ -58,7 +55,7 @@ const BlogList = () => {
                   className="cursor-pointer"
                   onClick={() => setSelectedTag(undefined)}
                 >
-                  全部
+                  All
                 </Badge>
                 {tags.map((t) => (
                   <Badge
@@ -75,7 +72,6 @@ const BlogList = () => {
             </>
           )}
 
-          {/* Posts grid */}
           {isLoading ? (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -89,7 +85,7 @@ const BlogList = () => {
               ))}
             </div>
           ) : (
-            <p className="text-center text-muted-foreground py-20">暂无文章</p>
+            <p className="text-center text-muted-foreground py-20">No posts yet</p>
           )}
         </div>
       </main>

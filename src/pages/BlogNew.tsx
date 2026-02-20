@@ -13,7 +13,7 @@ const BlogNew = () => {
   if (!user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">请先登录后再写文章</p>
+        <p className="text-muted-foreground">Please sign in to write a post</p>
       </div>
     );
   }
@@ -26,7 +26,7 @@ const BlogNew = () => {
       <Header />
       <main className="relative z-10 pt-24 pb-16 px-4">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-display font-bold text-foreground mb-6">写新文章</h1>
+          <h1 className="text-3xl font-display font-bold text-foreground mb-6">New Post</h1>
           <BlogEditor
             saving={createPost.isPending}
             onSave={(data) => {
