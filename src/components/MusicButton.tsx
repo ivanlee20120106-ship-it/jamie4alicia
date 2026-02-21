@@ -116,7 +116,7 @@ const MusicButton = () => {
       <audio ref={audioRef} />
       <button
         onClick={toggle}
-        className="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-background/60 backdrop-blur-md border border-border/50 flex items-center justify-center text-2xl shadow-lg hover:bg-background/80 transition-all duration-300"
+        className="fixed bottom-20 left-6 z-50 w-12 h-12 rounded-full bg-background/60 backdrop-blur-md border border-border/50 flex items-center justify-center text-2xl shadow-lg hover:bg-background/80 transition-all duration-300"
         aria-label={isPlaying ? "暂停音乐" : "播放音乐"}
       >
         {isPlaying ? <Music size={20} className="text-gold" /> : <VolumeOff size={20} className="text-muted-foreground" />}
