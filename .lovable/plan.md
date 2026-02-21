@@ -1,45 +1,29 @@
 
 
-## 改动内容
+## 音乐按钮位置调整方案
 
-### 1. 添加 Footer 组件
+### 问题
+音乐按钮当前使用 `fixed bottom-6 right-6 z-50` 定位，导致它与地图右侧的操作按钮组以及页面底部的 Footer 重叠（如截图所示，按钮被 Footer 半遮挡）。
 
-新建 `src/components/Footer.tsx`，展示版权信息：
+### 解决方案
 
+将音乐按钮从 **右下角** 移动到 **左下角**，避开地图右侧按钮组的冲突，同时增加底部距离以避开 Footer。
+
+### 具体修改
+
+**文件：`src/components/MusicButton.tsx`**
+
+将按钮的定位 class 从：
 ```
-(c) 2026 Jamie & Alicia. Good Night! Love You! Every Single Day! All rights reserved.
+fixed bottom-6 right-6 z-50
+```
+改为：
+```
+fixed bottom-20 left-6 z-50
 ```
 
-- 使用项目现有字体风格（font-body / font-script）
-- 半透明背景 + 金色文字，与整体暗色主题一致
-- 底部安全区域适配（`pb-safe`），兼容 iPhone 底部横条
+- `left-6`：移到左侧，与地图右侧的搜索/标记/定位按钮完全不冲突
+- `bottom-20`：提高位置（约 5rem），避免与 Footer 区域重叠
 
-### 2. 在首页添加 Footer
+这是唯一需要修改的文件，改动为一行 class 调整。
 
-修改 `src/pages/Index.tsx`，在 `<LazyTravelMap />` 下方插入 `<Footer />`。
-
-### 3. 移动端 iOS / Android 浏览器兼容修复
-
-在 `index.html` 和 `src/index.css` 中增加以下优化：
-
-**index.html:**
-- 添加 `apple-mobile-web-app-capable` 和 `apple-mobile-web-app-status-bar-style` meta 标签
-- 添加 `theme-color` meta 标签（匹配深色背景色）
-- 更新 `<title>` 为 "Jamie & Alicia"
-
-**src/index.css:**
-- 添加 `100dvh`（动态视口高度）支持，解决 iOS Safari 地址栏收缩导致的高度问题
-- 添加 `-webkit-overflow-scrolling: touch` 改善 iOS 滚动流畅度
-- 添加 `env(safe-area-inset-bottom)` padding 确保内容不被 iPhone 底部横条遮挡
-- 修复 `overflow-x: hidden` 在 iOS 上的已知滚动 bug（添加 `position: relative`）
-
----
-
-## 涉及文件
-
-| 操作 | 文件 | 改动 |
-|------|------|------|
-| 新建 | `src/components/Footer.tsx` | Footer 组件 |
-| 修改 | `src/pages/Index.tsx` | 引入 Footer |
-| 修改 | `index.html` | 移动端 meta 标签、标题更新 |
-| 修改 | `src/index.css` | dvh 支持、iOS 滚动修复、安全区域适配 |
