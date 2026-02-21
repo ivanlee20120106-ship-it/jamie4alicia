@@ -4,7 +4,10 @@ import L from "leaflet";
 import MapMarker from "./MapMarker";
 import MapPopup from "./MapPopup";
 import MapButtons from "./MapButtons";
+import MapRoutes from "./MapRoutes";
+import MarkerSidebar from "./MarkerSidebar";
 import useClickedMarker from "./useClickedMarker";
+import type { TravelRoute } from "@/hooks/useRoutes";
 
 interface TravelMarker {
   id: string;
@@ -25,6 +28,7 @@ interface MapContentProps {
   onDelete: (id: string) => void;
   onAddMarker?: (lat: number, lng: number, name: string, type: "visited" | "planned") => void;
   autoOpenId?: string;
+  routes?: TravelRoute[];
 }
 
 // Dynamic marker icons
@@ -44,7 +48,7 @@ interface DynamicMarker {
   address?: string;
 }
 
-const MapContent = ({ markers, canDelete, onDelete, onAddMarker, autoOpenId }: MapContentProps) => {
+const MapContent = ({ markers, canDelete, onDelete, onAddMarker, autoOpenId, routes = [] }: MapContentProps) => {
   const map = useMap();
   const { clicked, clearClicked } = useClickedMarker();
   const [dynamicMarkers, setDynamicMarkers] = useState<DynamicMarker[]>([]);
@@ -80,6 +84,9 @@ const MapContent = ({ markers, canDelete, onDelete, onAddMarker, autoOpenId }: M
         updateWhenIdle={true}
         keepBuffer={2}
       />
+
+      <MapRoutes routes={routes} />
+      <MarkerSidebar markers={markers} />
 
       {markers.map((m) => (
         <MapMarker

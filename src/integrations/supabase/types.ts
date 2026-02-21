@@ -291,6 +291,45 @@ export type Database = {
           },
         ]
       }
+      travel_routes: {
+        Row: {
+          color: string
+          created_at: string
+          description: string | null
+          distance: number | null
+          duration: number | null
+          id: string
+          name: string
+          path: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          description?: string | null
+          distance?: number | null
+          duration?: number | null
+          id?: string
+          name: string
+          path?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          description?: string | null
+          distance?: number | null
+          duration?: number | null
+          id?: string
+          name?: string
+          path?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

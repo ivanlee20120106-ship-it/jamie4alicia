@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { MapContainer } from "react-leaflet";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useRoutes } from "@/hooks/useRoutes";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import MapContent from "./map/MapContent";
@@ -24,6 +25,7 @@ type FilterType = "all" | "visited" | "planned";
 
 const TravelMap = () => {
   const { user } = useAuth();
+  const { data: routes } = useRoutes();
   const [markers, setMarkers] = useState<TravelMarker[]>([]);
   const [filter, setFilter] = useState<FilterType>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -133,6 +135,7 @@ const TravelMap = () => {
               onDelete={handleDelete}
               onAddMarker={handleAddFromMap}
               autoOpenId={autoOpenId}
+              routes={routes ?? []}
             />
           </MapContainer>
         </div>
