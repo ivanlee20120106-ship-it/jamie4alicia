@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import MapContent from "./map/MapContent";
 import AddMarkerDialog from "./AddMarkerDialog";
+import { travelMarkerSchema } from "@/lib/schemas";
 
 interface TravelMarker {
   id: string;
@@ -83,9 +84,11 @@ const TravelMap = () => {
 
   const handleAddFromMap = useCallback(async (lat: number, lng: number, name: string, type: "visited" | "planned") => {
     if (!user) { toast.error("请先登录"); return; }
-    const { error } = await supabase.from("travel_markers" as any).insert({ lat, lng, name, type, user_id: user.id });
+    const parsed = travelMarkerSchema.safeParse({ name: name.trim(), lat, lng, type, description: null, visit_date: null });
+    if (!parsed.success) { toast.error(parsed.error.errors[0].message); return; }
+    const { error } = await supabase.from("travel_markers" as any).insert({ ...parsed.data, user_id: user.id });
     if (error) { toast.error("添加失败"); return; }
-    toast.success(`已添加: ${name}`);
+    toast.success(`已添加: ${parsed.data.name}`);
     fetchMarkers();
   }, [user, fetchMarkers]);
 
