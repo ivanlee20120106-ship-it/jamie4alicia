@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Upload } from "lucide-react";
 import { toast } from "sonner";
@@ -29,9 +29,10 @@ export interface PhotoRecord {
   created_at: string;
 }
 
-const MAX_PHOTOS = 36;
+const MAX_PHOTOS = 200;
 const MAX_TOTAL_SIZE = 60 * 1024 * 1024;
 const CONCURRENT_LIMIT = 6;
+const PAGE_SIZE = 36;
 
 const getPublicUrl = (path: string) =>
   supabase.storage.from("photos").getPublicUrl(path).data.publicUrl;
@@ -78,6 +79,10 @@ const PhotoWall = () => {
   const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [user, setUser] = useState<any>(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const pageRef = useRef(0);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
@@ -87,18 +92,41 @@ const PhotoWall = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchPhotos = useCallback(async () => {
+  const fetchPhotos = useCallback(async (page = 0, append = false) => {
+    const from = page * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
     const { data, error } = await supabase
       .from("photos")
       .select("id, filename, original_filename, storage_path, thumbnail_path, compressed_path, file_size, width, height, is_heif, created_at")
       .order("created_at", { ascending: true })
-      .limit(MAX_PHOTOS);
+      .range(from, to);
 
-    if (error) { console.error(error); setPhotos([]); return; }
-    setPhotos((data as PhotoRecord[]) ?? []);
+    if (error) { console.error(error); if (!append) setPhotos([]); return; }
+    const rows = (data as PhotoRecord[]) ?? [];
+    setHasMore(rows.length === PAGE_SIZE);
+    setPhotos((prev) => append ? [...prev, ...rows] : rows);
   }, []);
 
-  useEffect(() => { fetchPhotos(); }, [fetchPhotos]);
+  useEffect(() => { fetchPhotos(0); }, [fetchPhotos]);
+
+  // Infinite scroll via IntersectionObserver
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && hasMore && !loadingMore) {
+          setLoadingMore(true);
+          const nextPage = pageRef.current + 1;
+          pageRef.current = nextPage;
+          fetchPhotos(nextPage, true).finally(() => setLoadingMore(false));
+        }
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, loadingMore, fetchPhotos]);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -203,7 +231,7 @@ const PhotoWall = () => {
       else if (successCount > 0) toast.warning(`上传完成：${successCount} 张成功，${failCount} 张失败`);
       else toast.error("所有照片上传失败");
 
-      if (successCount > 0) fetchPhotos();
+      if (successCount > 0) { pageRef.current = 0; fetchPhotos(0); }
     } catch (err) { toast.error("上传出错"); console.error(err); }
     finally { setUploading(false); setUploadProgress(null); e.target.value = ""; }
   };
@@ -225,7 +253,8 @@ const PhotoWall = () => {
 
     toast.success("Deleted");
     setSelectedIndex(null);
-    fetchPhotos();
+    pageRef.current = 0;
+    fetchPhotos(0);
   };
 
   const flatGrid = HEART_GRID.flat();
@@ -286,6 +315,32 @@ const PhotoWall = () => {
           })}
         </div>
       </div>
+
+      {/* Overflow photos beyond heart grid capacity */}
+      {lightboxPhotos.length > flatGrid.filter(Boolean).length && (
+        <div className="max-w-3xl mx-auto mt-8 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+          {lightboxPhotos.slice(flatGrid.filter(Boolean).length).map((photo, idx) => {
+            const realIdx = flatGrid.filter(Boolean).length + idx;
+            return (
+              <div
+                key={photo.id}
+                className="relative aspect-square rounded-xl overflow-hidden hover:scale-105 hover:z-10 cursor-pointer transition-transform duration-300"
+                onClick={() => setSelectedIndex(realIdx)}
+              >
+                <img src={photo.thumbnailUrl} alt="love" className="w-full h-full object-cover" loading="lazy" decoding="async" />
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Infinite scroll sentinel */}
+      <div ref={sentinelRef} className="h-4" />
+      {loadingMore && (
+        <div className="flex justify-center py-4">
+          <div className="w-5 h-5 border-2 border-gold/40 border-t-gold rounded-full animate-spin" />
+        </div>
+      )}
 
       {selectedIndex !== null && selectedIndex < lightboxPhotos.length && (
         <PhotoLightbox
