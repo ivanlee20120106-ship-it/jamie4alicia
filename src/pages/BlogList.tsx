@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { PenLine } from "lucide-react";
+import { PenLine, HeartHandshake } from "lucide-react";
 
 const BlogList = () => {
   const [selectedTag, setSelectedTag] = useState<string>();
@@ -85,7 +85,22 @@ const BlogList = () => {
               ))}
             </div>
           ) : (
-            <p className="text-center text-muted-foreground py-20">No posts yet</p>
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+              <div className="w-20 h-20 rounded-full bg-love/10 flex items-center justify-center mb-6">
+                <HeartHandshake className="w-10 h-10 text-love" />
+              </div>
+              <h2 className="text-2xl font-display font-bold text-gradient-love glow-gold mb-3">
+                Our story is just beginning...
+              </h2>
+              <p className="text-muted-foreground max-w-md mx-auto mb-6">
+                Every great love story deserves to be told. The first chapter awaits.
+              </p>
+              {user && (
+                <Button asChild size="lg" className="bg-gradient-to-r from-love to-gold text-white hover:opacity-90">
+                  <Link to="/blog/new"><PenLine className="w-4 h-4 mr-2" />Write Our First Story</Link>
+                </Button>
+              )}
+            </div>
           )}
         </div>
       </main>
