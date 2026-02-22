@@ -69,6 +69,14 @@ const MapContent = ({ markers, canDelete, onDelete, onAddMarker, autoOpenId, rou
     };
   }, [map]);
 
+  // Fit bounds to all markers on initial load
+  useEffect(() => {
+    if (markers.length > 0) {
+      const bounds = L.latLngBounds(markers.map((m) => [m.lat, m.lng]));
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 6 });
+    }
+  }, [markers.length > 0]); // only on first load when markers arrive
+
   const handleSearchResult = useCallback((lat: number, lng: number, name: string) => {
     setDynamicMarkers((prev) => [...prev.filter((m) => m.type !== "searched"), { lat, lng, name, type: "searched", address: name }]);
   }, []);
@@ -99,6 +107,7 @@ const MapContent = ({ markers, canDelete, onDelete, onAddMarker, autoOpenId, rou
           imageUrl={m.image_url}
           compressedUrl={m.compressed_url}
           description={m.description}
+          visitDate={m.visit_date}
           canDelete={canDelete}
           onDelete={onDelete}
           autoOpen={m.id === autoOpenId}

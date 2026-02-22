@@ -105,6 +105,12 @@ const TravelMap = () => {
           Our Journey Map
         </h2>
 
+        {markers.length > 0 && (
+          <p className="text-center text-sm text-gold/80 font-body italic mb-4">
+            We've explored {markers.length} place{markers.length !== 1 ? "s" : ""} together 🗺️
+          </p>
+        )}
+
         <div className="flex justify-center gap-2 mb-4">
           {filterButtons.map((b) => (
             <button

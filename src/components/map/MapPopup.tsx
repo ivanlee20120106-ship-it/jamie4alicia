@@ -8,6 +8,8 @@ interface MapPopupProps {
   imageUrl?: string | null;
   address?: string | null;
   addressLoading?: boolean;
+  description?: string | null;
+  visitDate?: string | null;
   type?: "visited" | "planned" | "clicked" | "searched" | "live";
   canDelete?: boolean;
   onDelete?: () => void;
@@ -20,6 +22,8 @@ const MapPopup = ({
   imageUrl,
   address,
   addressLoading,
+  description,
+  visitDate,
   type,
   canDelete,
   onDelete,
@@ -61,6 +65,20 @@ const MapPopup = ({
             style={{ opacity: imgLoaded ? 1 : 0 }}
           />
         </div>
+      )}
+
+      {/* Description */}
+      {description && (
+        <p className="text-xs font-body italic mb-1.5" style={{ color: "#b8860b" }}>
+          {description}
+        </p>
+      )}
+
+      {/* Visit date */}
+      {visitDate && (
+        <p className="text-[11px] font-body mb-1.5" style={{ color: "#999" }}>
+          📅 {new Date(visitDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+        </p>
       )}
 
       {/* Reverse geocoded address for dynamic markers */}
