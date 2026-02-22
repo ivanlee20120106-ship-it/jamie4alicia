@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, memo } from "react";
 
 const HEART_COLORS = [
   "text-love",
@@ -15,9 +15,18 @@ const HEART_COLORS = [
   "text-yellow-600",
 ];
 
-const FloatingHearts = () => {
+/**
+ * Respects prefers-reduced-motion via CSS (hidden when reduced motion preferred).
+ * Renders 20 hearts on mobile (<768px) vs 35 on desktop for performance.
+ */
+const FloatingHearts = memo(() => {
+  const count = useMemo(
+    () => (typeof window !== "undefined" && window.innerWidth < 768 ? 20 : 35),
+    []
+  );
+
   const hearts = useMemo(() => {
-    return Array.from({ length: 65 }, (_, i) => ({
+    return Array.from({ length: count }, (_, i) => ({
       id: i,
       left: `${Math.random() * 100}%`,
       delay: `${Math.random() * 5}s`,
@@ -28,10 +37,10 @@ const FloatingHearts = () => {
       rotateStart: Math.floor(Math.random() * 360),
       rotateEnd: Math.floor(Math.random() * 720) - 360,
     }));
-  }, []);
+  }, [count]);
 
   return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 motion-reduce:hidden">
       {hearts.map((h) => (
         <span
           key={h.id}
@@ -52,6 +61,8 @@ const FloatingHearts = () => {
       ))}
     </div>
   );
-};
+});
+
+FloatingHearts.displayName = "FloatingHearts";
 
 export default FloatingHearts;
