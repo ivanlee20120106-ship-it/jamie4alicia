@@ -243,6 +243,7 @@ export type Database = {
       }
       travel_markers: {
         Row: {
+          country: string | null
           created_at: string
           description: string | null
           id: string
@@ -256,6 +257,7 @@ export type Database = {
           visit_date: string | null
         }
         Insert: {
+          country?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -269,6 +271,7 @@ export type Database = {
           visit_date?: string | null
         }
         Update: {
+          country?: string | null
           created_at?: string
           description?: string | null
           id?: string

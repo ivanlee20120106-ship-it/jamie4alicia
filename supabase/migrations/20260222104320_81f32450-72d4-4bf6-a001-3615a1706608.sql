@@ -1,0 +1,1 @@
+ALTER TABLE public.travel_markers ADD COLUMN IF NOT EXISTS country text;
