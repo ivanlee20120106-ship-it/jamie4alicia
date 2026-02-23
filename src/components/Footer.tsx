@@ -1,5 +1,3 @@
-import { Link } from "react-router-dom";
-
 const Footer = () => {
   return (
     <footer className="relative z-10 py-8 text-center" style={{ paddingBottom: "calc(2rem + env(safe-area-inset-bottom, 0px))" }}>
@@ -15,12 +13,6 @@ const Footer = () => {
           </span>{" "}
           All rights reserved.
         </p>
-        <Link
-          to="/admin/login"
-          className="inline-block mt-2 text-xs text-muted-foreground/40 hover:text-muted-foreground transition-colors"
-        >
-          Admin
-        </Link>
       </div>
     </footer>
   );
