@@ -9,7 +9,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
-const DataDashboard = lazy(() => import("./pages/DataDashboard"));
+
 const BlogList = lazy(() => import("./pages/BlogList"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
 const BlogNew = lazy(() => import("./pages/BlogNew"));
@@ -28,14 +28,6 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route
-              path="/dashboard"
-              element={
-                <Suspense fallback={<div className="min-h-screen bg-background" />}>
-                  <DataDashboard />
-                </Suspense>
-              }
-            />
             <Route path="/blog" element={<Suspense fallback={<div className="min-h-screen bg-background" />}><BlogList /></Suspense>} />
             <Route path="/blog/new" element={<Suspense fallback={<div className="min-h-screen bg-background" />}><ProtectedRoute><BlogNew /></ProtectedRoute></Suspense>} />
             <Route path="/blog/manage" element={<Suspense fallback={<div className="min-h-screen bg-background" />}><ProtectedRoute><BlogManage /></ProtectedRoute></Suspense>} />

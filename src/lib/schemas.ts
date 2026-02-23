@@ -14,13 +14,5 @@ export const travelMarkerSchema = z.object({
   visit_date: z.string().nullable().optional(),
 });
 
-export const cacheEntrySchema = z.object({
-  key: z.string().trim().min(1, "Key is required").max(500, "Key too long"),
-  value: z.unknown(),
-  category: z.enum(["general", "user", "config", "session", "analytics"]),
-  ttl_seconds: z.number().int().positive("TTL must be positive").max(86400 * 365, "TTL too large"),
-});
-
 export type AuthInput = z.infer<typeof authSchema>;
 export type TravelMarkerInput = z.infer<typeof travelMarkerSchema>;
-export type CacheEntryInput = z.infer<typeof cacheEntrySchema>;
