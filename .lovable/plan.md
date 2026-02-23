@@ -1,29 +1,33 @@
 
 
-## 音乐按钮位置调整方案
+# Fix: Auto-fill Latitude/Longitude from City Name
 
-### 问题
-音乐按钮当前使用 `fixed bottom-6 right-6 z-50` 定位，导致它与地图右侧的操作按钮组以及页面底部的 Footer 重叠（如截图所示，按钮被 Footer 半遮挡）。
+## Problem
+When adding a place via the "Add a Place" dialog, users must manually fill in latitude and longitude even after typing a city name. The geocoding search button exists but the experience is unreliable -- users expect coordinates to auto-fill when they enter a city name.
 
-### 解决方案
+## Solution
+Improve the AddMarkerDialog so that geocoding is more automatic and robust:
 
-将音乐按钮从 **右下角** 移动到 **左下角**，避开地图右侧按钮组的冲突，同时增加底部距离以避开 Footer。
+### Changes to `src/components/AddMarkerDialog.tsx`
 
-### 具体修改
+1. **Auto-geocode on blur** -- When the user finishes typing a city name and leaves the input field (blur event), automatically trigger geocoding if the lat/lng fields are still empty. This means users don't need to know about the search button.
 
-**文件：`src/components/MusicButton.tsx`**
+2. **Auto-geocode on search button click** -- Keep the existing search button behavior but add better error feedback and ensure coordinates are reliably written to state.
 
-将按钮的定位 class 从：
-```
-fixed bottom-6 right-6 z-50
-```
-改为：
-```
-fixed bottom-20 left-6 z-50
-```
+3. **Visual feedback** -- Show a brief loading state on the lat/lng fields while geocoding is in progress (e.g., placeholder changes to "Looking up...").
 
-- `left-6`：移到左侧，与地图右侧的搜索/标记/定位按钮完全不冲突
-- `bottom-20`：提高位置（约 5rem），避免与 Footer 区域重叠
+4. **Prevent submission without coordinates** -- Add validation that prevents form submission if lat/lng are empty, with a toast message like "Please enter a place name and search for coordinates, or fill them in manually."
 
-这是唯一需要修改的文件，改动为一行 class 调整。
+5. **Debounced auto-search** -- Optionally trigger geocoding automatically after the user stops typing for 1.5 seconds (respecting Nominatim's rate limit), so coordinates appear without any extra action.
+
+### Technical Details
+
+- The `geocodeName` function already exists and works correctly. The fix focuses on triggering it at the right moments.
+- The Nominatim API throttle (1.1s interval) is already implemented in `src/lib/geocoding.ts` and will be respected.
+- Add an `onBlur` handler to the name input that calls `geocodeName()` when lat/lng are empty.
+- Add a subtle loading indicator on the coordinate fields during geocoding.
+- The search button remains as a manual fallback.
+
+### Files Modified
+- `src/components/AddMarkerDialog.tsx` -- Add auto-geocode on blur, loading states, and better validation.
 
