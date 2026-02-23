@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { MapPin, X, Upload, Loader2, CalendarIcon, Search } from "lucide-react";
 import { format } from "date-fns";
@@ -27,12 +27,14 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const geocodeName = async () => {
-    if (!name.trim()) return;
+  const geocodeName = useCallback(async (query?: string) => {
+    const q = (query ?? name).trim();
+    if (!q) return;
     setGeocoding(true);
     try {
-      const data = await geocodeSearch(name.trim());
+      const data = await geocodeSearch(q);
       if (data.length > 0) {
         setLat(parseFloat(data[0].lat).toFixed(4));
         setLng(parseFloat(data[0].lon).toFixed(4));
@@ -45,6 +47,25 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
     } finally {
       setGeocoding(false);
     }
+  }, [name]);
+
+  // Debounced auto-search: triggers 1.5s after user stops typing
+  const handleNameChange = (value: string) => {
+    setName(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (value.trim().length >= 2) {
+      debounceRef.current = setTimeout(() => {
+        geocodeName(value);
+      }, 1500);
+    }
+  };
+
+  // Auto-geocode on blur if coordinates are empty
+  const handleNameBlur = () => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (name.trim() && !lat && !lng) {
+      geocodeName();
+    }
   };
 
   useEffect(() => {
@@ -54,8 +75,18 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
     }
   }, [clickedLatLng]);
 
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!lat || !lng || isNaN(parseFloat(lat)) || isNaN(parseFloat(lng))) {
+      toast.error("Please enter a place name and search for coordinates, or fill them in manually.");
+      return;
+    }
 
     const parsedLat = parseFloat(lat);
     const parsedLng = parseFloat(lng);
@@ -166,14 +197,15 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
               type="text"
               placeholder="Place name *"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => handleNameChange(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); geocodeName(); } }}
+              onBlur={handleNameBlur}
               required
               className="flex-1 px-3 py-2 rounded-lg bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-gold/50"
             />
             <button
               type="button"
-              onClick={geocodeName}
+              onClick={() => geocodeName()}
               disabled={geocoding || !name.trim()}
               className="px-3 py-2 rounded-lg bg-background border border-border text-muted-foreground hover:text-gold hover:border-gold/40 transition-colors disabled:opacity-50"
             >
@@ -201,10 +233,12 @@ const AddMarkerDialog = ({ isOpen, onClose, onAdded, clickedLatLng }: AddMarkerD
           </div>
 
           <div className="grid grid-cols-2 gap-2">
-            <input type="number" step="any" placeholder="Latitude" value={lat} onChange={(e) => setLat(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-gold/50" />
-            <input type="number" step="any" placeholder="Longitude" value={lng} onChange={(e) => setLng(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-gold/50" />
+            <input type="number" step="any" placeholder={geocoding ? "Looking up..." : "Latitude"} value={lat} onChange={(e) => setLat(e.target.value)}
+              disabled={geocoding}
+              className="w-full px-3 py-2 rounded-lg bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-gold/50 disabled:opacity-50" />
+            <input type="number" step="any" placeholder={geocoding ? "Looking up..." : "Longitude"} value={lng} onChange={(e) => setLng(e.target.value)}
+              disabled={geocoding}
+              className="w-full px-3 py-2 rounded-lg bg-background border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-gold/50 disabled:opacity-50" />
           </div>
           <p className="text-[10px] text-muted-foreground font-body -mt-1">💡 You can also tap on the map to pick a location</p>
 
