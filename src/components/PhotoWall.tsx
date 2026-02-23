@@ -4,6 +4,7 @@ import { Upload } from "lucide-react";
 import { toast } from "sonner";
 import PhotoLightbox from "./PhotoLightbox";
 import { generateSizes, validateImageFile } from "@/lib/imageProcessing";
+import { deletePhotoWithFiles } from "@/lib/storage";
 
 const HEART_GRID = [
   [0,0,1,1,0,1,1,0,0],
@@ -237,24 +238,17 @@ const PhotoWall = () => {
   };
 
   const handleDelete = async (photoId: string) => {
-    // Find the photo record
     const photo = photos.find(p => p.id === photoId);
     if (!photo) return;
-
-    // Delete from DB (cascades photo_wall_items)
-    const { error } = await supabase.from("photos").delete().eq("id", photoId);
-    if (error) { toast.error("Delete failed"); return; }
-
-    // Remove files from storage
-    const paths = [photo.storage_path, photo.thumbnail_path, photo.compressed_path].filter(Boolean) as string[];
-    if (paths.length > 0) {
-      await supabase.storage.from("photos").remove(paths);
+    try {
+      await deletePhotoWithFiles(photo);
+      toast.success("Photo deleted successfully");
+      setSelectedIndex(null);
+      pageRef.current = 0;
+      fetchPhotos(0);
+    } catch {
+      toast.error("Delete failed");
     }
-
-    toast.success("Deleted");
-    setSelectedIndex(null);
-    pageRef.current = 0;
-    fetchPhotos(0);
   };
 
   const flatGrid = HEART_GRID.flat();
