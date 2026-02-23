@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { ChevronLeft, Calendar, Clock } from "lucide-react";
+import { useEffect } from "react";
 
 function readingTime(content: string) {
   return Math.max(1, Math.ceil(content.trim().split(/\s+/).length / 200));
@@ -15,6 +16,25 @@ function readingTime(content: string) {
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+}
+
+function BlogPostMeta({ post }: { post: { title: string; description?: string | null; cover_image?: string | null } }) {
+  useEffect(() => {
+    document.title = `${post.title} — Jamie & Alicia`;
+    const setMeta = (prop: string, content: string) => {
+      let el = document.querySelector(`meta[property="${prop}"]`) || document.querySelector(`meta[name="${prop}"]`);
+      if (!el) { el = document.createElement("meta"); (prop.startsWith("og:") ? el.setAttribute("property", prop) : el.setAttribute("name", prop)); document.head.appendChild(el); }
+      el.setAttribute("content", content);
+    };
+    setMeta("og:title", `${post.title} — Jamie & Alicia`);
+    setMeta("og:description", post.description || "A story from Jamie & Alicia's love journal.");
+    if (post.cover_image) setMeta("og:image", post.cover_image);
+    setMeta("twitter:title", `${post.title} — Jamie & Alicia`);
+    setMeta("twitter:description", post.description || "A story from Jamie & Alicia's love journal.");
+    if (post.cover_image) setMeta("twitter:image", post.cover_image);
+    return () => { document.title = "Jamie & Alicia — Our Love Story"; };
+  }, [post.title, post.description, post.cover_image]);
+  return null;
 }
 
 const BlogPost = () => {
@@ -45,6 +65,7 @@ const BlogPost = () => {
             <p className="text-center text-muted-foreground py-20">Post not found</p>
           ) : (
             <article>
+              <BlogPostMeta post={post} />
               {post.cover_image && (
                 <img
                   src={post.cover_image}
