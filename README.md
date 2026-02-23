@@ -4,6 +4,14 @@
 
 **URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
 
+## Setup
+
+1. Copy `.env.example` to `.env`:
+   ```sh
+   cp .env.example .env
+   ```
+2. Fill in your Supabase credentials (URL, project ID, and anon key) from your Lovable Cloud backend.
+
 ## How can I edit this code?
 
 There are several ways of editing your application.
