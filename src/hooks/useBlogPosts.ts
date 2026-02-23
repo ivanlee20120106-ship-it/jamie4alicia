@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { handleSupabaseError } from "@/lib/supabase-error";
 
 export interface BlogPost {
   id: string;
@@ -110,7 +111,7 @@ export function useCreatePost() {
       qc.invalidateQueries({ queryKey: ["blog-posts"] });
       toast.success("Post created");
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e) => toast.error(handleSupabaseError(e, "createPost")),
   });
 }
 
@@ -132,7 +133,7 @@ export function useUpdatePost() {
       qc.invalidateQueries({ queryKey: ["blog-posts"] });
       toast.success("Post updated");
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e) => toast.error(handleSupabaseError(e, "updatePost")),
   });
 }
 
@@ -148,7 +149,7 @@ export function useDeletePost() {
       qc.invalidateQueries({ queryKey: ["blog-posts"] });
       toast.success("Post deleted");
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e) => toast.error(handleSupabaseError(e, "deletePost")),
   });
 }
 

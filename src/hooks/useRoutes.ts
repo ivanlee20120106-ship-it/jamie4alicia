@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { handleSupabaseError } from "@/lib/supabase-error";
 
 export interface TravelRoute {
   id: string;
@@ -62,7 +63,7 @@ export function useCreateRoute() {
       qc.invalidateQueries({ queryKey: ["travel-routes"] });
       toast.success("Route added");
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e) => toast.error(handleSupabaseError(e, "createRoute")),
   });
 }
 
@@ -81,6 +82,6 @@ export function useDeleteRoute() {
       qc.invalidateQueries({ queryKey: ["travel-routes"] });
       toast.success("Route deleted");
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e) => toast.error(handleSupabaseError(e, "deleteRoute")),
   });
 }
